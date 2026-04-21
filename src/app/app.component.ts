@@ -23,7 +23,7 @@ import { filter } from 'rxjs/operators';
             <nav class="hidden md:flex items-center gap-6 text-sm text-slate-600">
               <a routerLink="/login" class="hover:text-slate-900 transition-colors">Login</a>
               <a routerLink="/signup" class="hover:text-slate-900 transition-colors">Sign up</a>
-              <a routerLink="/dashboard" class="hover:text-slate-900 transition-colors">Dashboard</a>
+              <!-- <a routerLink="/dashboard" class="hover:text-slate-900 transition-colors">Dashboard</a> -->
             </nav>
 
             <button

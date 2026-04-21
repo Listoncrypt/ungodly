@@ -1,435 +1,322 @@
-<div class="min-h-screen bg-black text-white overflow-hidden">
-  <section class="relative min-h-screen flex items-center justify-center">
-    <div
-      class="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"
-    ></div>
-    <div
-      class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"
-    ></div>
-
-    <div
-      class="absolute top-20 left-10 w-20 h-20 bg-blue-500/20 rounded-full blur-xl animate-pulse"
-    ></div>
-    <div
-      class="absolute top-40 right-20 w-32 h-32 bg-purple-500/20 rounded-full blur-xl animate-pulse delay-1000"
-    ></div>
-    <div
-      class="absolute bottom-40 left-20 w-24 h-24 bg-cyan-500/20 rounded-full blur-xl animate-pulse delay-500"
-    ></div>
-
-    <header class="absolute inset-x-0 top-0 z-50">
-      <div
-        class="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between"
-      >
-        <a routerLink="/" class="flex items-center gap-3 group">
-          <div
-            class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform"
-          >
-            <span class="text-white font-black text-lg">U</span>
-          </div>
-          <div class="flex flex-col">
-            <span class="text-sm font-bold tracking-wider text-white"
-              >UNGODLY</span
-            >
-            <span class="text-xs text-slate-300">ACHV</span>
-          </div>
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <header
+    class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200"
+  >
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex items-center justify-between">
+        <!-- Logo -->
+        <a
+          routerLink="/"
+          class="inline-flex items-center gap-2 sm:gap-3 flex-shrink-0"
+        >
+          <img
+            src="assets/ungodly-achv-logo.png"
+            alt="UNGODLY ACHV"
+            class="h-12 w-12 rounded-full object-cover border-2 border-gray-200"
+          />
         </a>
 
-        <div class="hidden md:flex items-center gap-4">
+        <!-- Desktop Navigation -->
+        <nav class="hidden md:flex items-center gap-8 text-sm text-gray-600">
           <button
-            (click)="scrollToSection('services')"
-            class="text-gray-300 hover:text-white transition-colors"
+            (click)="scrollToSection('features')"
+            class="hover:text-gray-900 transition-colors font-medium"
           >
             Services
           </button>
           <button
-            (click)="scrollToSection('results')"
-            class="text-gray-300 hover:text-white transition-colors"
+            (click)="scrollToSection('partners')"
+            class="hover:text-gray-900 transition-colors font-medium"
           >
-            Results
+            Become a Partner
+          </button>
+          <!-- <a
+            routerLink="/login"
+            class="hover:text-gray-900 transition-colors font-medium"
+          >
+            Login
+          </a>
+          <a
+            routerLink="/signup"
+            class="hover:text-gray-900 transition-colors font-medium"
+          >
+            Sign up
+          </a> -->
+        </nav>
+
+        <!-- CTA Button & Mobile Menu -->
+        <div class="flex items-center gap-4">
+          <button
+            (click)="onBecomeAgent()"
+            class="hidden sm:inline-flex px-6 py-2 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            Become An Agent
           </button>
           <button
-            (click)="scrollToSection('contact')"
-            class="text-gray-300 hover:text-white transition-colors"
+            (click)="toggleMobileMenu()"
+            class="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+            aria-label="Toggle menu"
           >
-            Contact
-          </button>
-          <button
-            (click)="onGetStarted()"
-            class="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-2 px-6 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-purple-500/25"
-          >
-            Become A Creator
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                *ngIf="!isMobileMenuOpen"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16"
+              ></path>
+              <path
+                *ngIf="isMobileMenuOpen"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
+            </svg>
           </button>
         </div>
       </div>
-    </header>
 
-    <div class="relative z-10 text-center max-w-6xl mx-auto px-6 pt-32 pb-16">
-      <h1
-        class="text-5xl md:text-7xl lg:text-8xl font-black mb-8 leading-tight"
-      >
-        <span
-          class="bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent"
-          >Communities That</span
-        ><br />
-        <span
-          class="bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent"
-          >Drive Results</span
-        >
-      </h1>
-      <p
-        class="text-xl md:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed"
-      >
-        We don't just build communities—we create movements. Through strategic
-        on-chain marketing and authentic engagement, we turn your Web3 project
-        into a thriving ecosystem that attracts, retains, and converts users
-        into loyal advocates.
-      </p>
-      <div
-        class="flex flex-col sm:flex-row gap-6 justify-center items-center mb-20"
+      <!-- Mobile Navigation -->
+      <nav
+        *ngIf="isMobileMenuOpen"
+        class="md:hidden mt-4 pt-4 border-t border-gray-200 space-y-2"
       >
         <button
-          (click)="scrollToSection('results')"
-          class="border-2 border-gray-600 hover:border-purple-400 text-gray-300 hover:text-white font-semibold py-4 px-8 rounded-full text-lg transition-all duration-300 hover:bg-purple-500/10"
+          (click)="scrollToSection('features'); closeMobileMenu()"
+          class="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
+        >
+          Services
+        </button>
+        <button
+          (click)="scrollToSection('partners'); closeMobileMenu()"
+          class="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
+        >
+          Become a Partner
+        </button>
+        <!-- <a
+          routerLink="/login"
+          (click)="closeMobileMenu()"
+          class="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
+        >
+          Login
+        </a>
+        <a
+          routerLink="/signup"
+          (click)="closeMobileMenu()"
+          class="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
+        >
+          Sign up
+        </a> -->
+        <button
+          (click)="onBecomeAgent(); closeMobileMenu()"
+          class="w-full mt-4 px-6 py-2 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+        >
+          Become An Agent
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="relative py-20 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto text-center">
+      <h1
+        class="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900 mb-6 leading-tight"
+      >
+        Introducing<br />UNGODLY ACHV
+      </h1>
+      <p
+        class="text-lg sm:text-xl text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed"
+      >
+        The smartest way for Web3 projects to grow organically on X. <br />
+        Tired of paying for fake impressions, bot followers, and engagement that
+        brings
+        <!-- no real users or volume. UNGODLY ACHV is the first fully automated
+        platform built exclusively for Web3 that helps your project reach and
+        engage real audience on X in a completely natural, organic way. Now
+        powered by AEO Auto Organic Engagement, Our groundbreaking new update
+        turns visibility struggles into unstoppable, authentic growth. -->
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <!-- <button
+          (click)="onBecomeAgent()"
+          class="px-8 py-3 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors text-lg"
+        >
+          Get Started
+        </button> -->
+        <button
+          (click)="joinTelegram()"
+          class="px-8 py-3 bg-white text-gray-900 font-semibold rounded-lg border-2 border-gray-300 hover:bg-gray-50 transition-colors text-lg"
         >
           View Results
         </button>
       </div>
-      <div class="grid grid-cols-3 gap-8 max-w-2xl mx-auto text-center">
-        <div>
-          <div
-            class="text-3xl md:text-4xl font-black text-transparent bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text mb-2"
-          >
-            500+
-          </div>
-          <div class="text-gray-400 text-sm">Projects Launched</div>
-        </div>
-        <div>
-          <div
-            class="text-3xl md:text-4xl font-black text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text mb-2"
-          >
-            $50M+
-          </div>
-          <div class="text-gray-400 text-sm">TVL Generated</div>
-        </div>
-        <div>
-          <div
-            class="text-3xl md:text-4xl font-black text-transparent bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text mb-2"
-          >
-            10K+
-          </div>
-          <div class="text-gray-400 text-sm">Community Members</div>
-        </div>
-      </div>
     </div>
   </section>
 
-  <section id="services" class="py-24 bg-slate-900">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="text-center mb-16">
-        <h2 class="text-4xl md:text-5xl font-black mb-6">
-          <span
-            class="bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent"
-            >Our Services</span
-          >
-        </h2>
-        <p class="text-xl text-gray-300 max-w-3xl mx-auto">
-          Comprehensive Web3 marketing solutions designed to build engaged
-          communities and drive sustainable growth.
-        </p>
-      </div>
-      <div class="grid md:grid-cols-3 gap-8">
-        <div
-          class="group text-center p-8 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 hover:border-blue-500/50 transition-all duration-300 hover:scale-105"
-        >
-          <div
-            class="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform"
-          >
-            <span class="text-2xl">🎯</span>
-          </div>
-          <h3 class="text-2xl font-bold text-white mb-4">
-            Authentic Partnerships
-          </h3>
-          <p class="text-gray-300 leading-relaxed">
-            Build strong communities that align with your values and grow
-            engagement across Web3 channels.
-          </p>
-        </div>
-        <div
-          class="group text-center p-8 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 hover:border-green-500/50 transition-all duration-300 hover:scale-105"
-        >
-          <div
-            class="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform"
-          >
-            <span class="text-2xl">📊</span>
-          </div>
-          <h3 class="text-2xl font-bold text-white mb-4">Measurable Results</h3>
-          <p class="text-gray-300 leading-relaxed">
-            Track campaign performance with detailed analytics and ROI reporting
-            for data-driven decisions.
-          </p>
-        </div>
-        <div
-          class="group text-center p-8 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 hover:border-purple-500/50 transition-all duration-300 hover:scale-105"
-        >
-          <div
-            class="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform"
-          >
-            <span class="text-2xl">🚀</span>
-          </div>
-          <h3 class="text-2xl font-bold text-white mb-4">AI-Powered Growth</h3>
-          <p class="text-gray-300 leading-relaxed">
-            Advanced algorithms optimize community growth and maximize ROI
-            across all marketing channels.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="py-24 bg-black" id="results">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="text-center mb-16">
-        <h2 class="text-4xl md:text-5xl font-black mb-6">
-          <span
-            class="bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent"
-            >Proven Results</span
-          >
-        </h2>
-        <p class="text-xl text-gray-300 max-w-3xl mx-auto">
-          Real impact for real brands. Our data-driven approach delivers
-          measurable growth and engagement.
-        </p>
-      </div>
-      <div class="grid grid-cols-2 lg:grid-cols-5 gap-8 text-center">
-        <div class="group">
-          <div
-            class="text-4xl lg:text-5xl font-black text-transparent bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text mb-2 group-hover:scale-110 transition-transform"
-          >
-            500+
-          </div>
-          <div class="text-gray-400 text-sm">Brand Partners</div>
-        </div>
-        <div class="group">
-          <div
-            class="text-4xl lg:text-5xl font-black text-transparent bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text mb-2 group-hover:scale-110 transition-transform"
-          >
-            $50M+
-          </div>
-          <div class="text-gray-400 text-sm">TVL Generated</div>
-        </div>
-        <div class="group">
-          <div
-            class="text-4xl lg:text-5xl font-black text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text mb-2 group-hover:scale-110 transition-transform"
-          >
-            10K+
-          </div>
-          <div class="text-gray-400 text-sm">Communities Built</div>
-        </div>
-        <div class="group">
-          <div
-            class="text-4xl lg:text-5xl font-black text-transparent bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text mb-2 group-hover:scale-110 transition-transform"
-          >
-            98%
-          </div>
-          <div class="text-gray-400 text-sm">Client Satisfaction</div>
-        </div>
-        <div class="group">
-          <div
-            class="text-4xl lg:text-5xl font-black text-transparent bg-gradient-to-r from-red-400 to-pink-400 bg-clip-text mb-2 group-hover:scale-110 transition-transform"
-          >
-            4.9★
-          </div>
-          <div class="text-gray-400 text-sm">Average Rating</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="py-24 bg-slate-900" id="contact">
-    <div class="max-w-4xl mx-auto px-6 text-center">
-      <div class="mb-12">
-        <h2 class="text-4xl md:text-5xl font-black mb-6">
-          <span
-            class="bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent"
-            >Ready to Get Started?</span
-          >
-        </h2>
-        <p class="text-xl text-gray-300 mb-8">
-          Book a personalized consultation with our team to learn how UNGODLY
-          ACHV can transform your social media presence.
-        </p>
-      </div>
-      <div
-        class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 border border-slate-700 shadow-2xl"
+  <!-- Features Section -->
+  <section id="features" class="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+    <div class="max-w-6xl mx-auto">
+      <h2
+        class="text-3xl sm:text-4xl font-black text-gray-900 mb-12 text-center"
       >
-        <h3 class="text-2xl font-bold mb-6">Book Your Free Consultation</h3>
+        Our Services
+      </h2>
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- Feature 1 -->
         <div
-          *ngIf="submitSuccess"
-          class="mb-6 p-4 bg-green-500/20 border border-green-500/30 rounded-lg text-green-300"
+          class="p-8 border border-gray-200 rounded-lg hover:shadow-lg transition-shadow"
         >
-          <div class="flex items-center">
-            <span class="text-2xl mr-3">✅</span>
-            <div>
-              <p class="font-semibold">Appointment booked successfully!</p>
-              <p class="text-sm">
-                We'll contact you soon to schedule your consultation.
-              </p>
-            </div>
-          </div>
+          <div class="text-4xl mb-4">🌱</div>
+          <h3 class="text-xl font-bold text-gray-900 mb-3">Organic Growth</h3>
+          <p class="text-gray-600">
+            Authentic community building on X with real audience engagement. No
+            bots, no fake followers—just genuine organic growth powered by real
+            community members.
+          </p>
         </div>
-        <form
-          [formGroup]="appointmentForm"
-          (ngSubmit)="onBookAppointment()"
-          class="space-y-6"
+
+        <!-- Feature 2 -->
+        <div
+          class="p-8 border border-gray-200 rounded-lg hover:shadow-lg transition-shadow"
         >
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div class="text-left">
-              <label class="block text-sm font-semibold text-slate-300 mb-2"
-                >Name *</label
-              ><input
-                type="text"
-                formControlName="name"
-                class="w-full px-4 py-3 bg-slate-800/50 border rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                [class.border-red-500]="getFieldError('name')"
-                [class.border-slate-600]="!getFieldError('name')"
-                placeholder="Your full name"
-              />
-              <p
-                *ngIf="getFieldError('name')"
-                class="text-red-400 text-sm mt-1"
-              >
-                {{ getFieldError("name") }}
-              </p>
-            </div>
-            <div class="text-left">
-              <label class="block text-sm font-semibold text-slate-300 mb-2"
-                >Email *</label
-              ><input
-                type="email"
-                formControlName="email"
-                class="w-full px-4 py-3 bg-slate-800/50 border rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                [class.border-red-500]="getFieldError('email')"
-                [class.border-slate-600]="!getFieldError('email')"
-                placeholder="your@email.com"
-              />
-              <p
-                *ngIf="getFieldError('email')"
-                class="text-red-400 text-sm mt-1"
-              >
-                {{ getFieldError("email") }}
-              </p>
-            </div>
-          </div>
-          <div class="text-left">
-            <label class="block text-sm font-semibold text-slate-300 mb-2"
-              >Phone *</label
-            ><input
-              type="tel"
-              formControlName="phone"
-              class="w-full px-4 py-3 bg-slate-800/50 border rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              [class.border-red-500]="getFieldError('phone')"
-              [class.border-slate-600]="!getFieldError('phone')"
-              placeholder="+1 (555) 123-4567"
-            />
-            <p *ngIf="getFieldError('phone')" class="text-red-400 text-sm mt-1">
-              {{ getFieldError("phone") }}
-            </p>
-          </div>
-          <div class="text-left">
-            <label class="block text-sm font-semibold text-slate-300 mb-2"
-              >Company (Optional)</label
-            ><input
-              type="text"
-              formControlName="company"
-              class="w-full px-4 py-3 bg-slate-800/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              placeholder="Your company name"
-            />
-          </div>
-          <div class="text-left">
-            <label class="block text-sm font-semibold text-slate-300 mb-2"
-              >Message *</label
-            ><textarea
-              formControlName="message"
-              rows="4"
-              class="w-full px-4 py-3 bg-slate-800/50 border rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none"
-              [class.border-red-500]="getFieldError('message')"
-              [class.border-slate-600]="!getFieldError('message')"
-              placeholder="Tell us about your goals and how we can help..."
-            ></textarea>
-            <p
-              *ngIf="getFieldError('message')"
-              class="text-red-400 text-sm mt-1"
-            >
-              {{ getFieldError("message") }}
-            </p>
-          </div>
-          <button
-            type="submit"
-            [disabled]="isSubmitting || appointmentForm.invalid"
-            class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-4 px-8 rounded-lg text-lg transition-all duration-200 transform hover:scale-105 disabled:transform-none disabled:cursor-not-allowed shadow-lg"
-          >
-            <span *ngIf="isSubmitting" class="flex items-center justify-center"
-              ><svg
-                class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  class="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  stroke-width="4"
-                ></circle>
-                <path
-                  class="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path></svg
-              >Booking...</span
-            ><span *ngIf="!isSubmitting">Book Appointment</span>
-          </button>
-        </form>
+          <div class="text-4xl mb-4">⚙️</div>
+          <h3 class="text-xl font-bold text-gray-900 mb-3">AOE Technology</h3>
+          <p class="text-gray-600">
+            Auto Organic Engagement powered by advanced algorithms. Our
+            groundbreaking technology automates authentic engagement across
+            multiple channels for unstoppable growth.
+          </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div
+          class="p-8 border border-gray-200 rounded-lg hover:shadow-lg transition-shadow"
+        >
+          <div class="text-4xl mb-4">�</div>
+          <h3 class="text-xl font-bold text-gray-900 mb-3">
+            Real-Time Analytics
+          </h3>
+          <p class="text-gray-600">
+            Comprehensive dashboard with authentic engagement metrics, audience
+            growth analytics, and performance tracking to measure your true
+            impact.
+          </p>
+        </div>
       </div>
     </div>
   </section>
 
-  <footer class="bg-slate-900 text-white py-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div class="col-span-1 md:col-span-2">
-          <div class="inline-flex items-center gap-3 mb-4">
-            <span
-              class="text-sm font-semibold tracking-[0.35em] uppercase text-slate-300"
-              >UNGODLY</span
-            ><span class="text-2xl font-black text-white">ACHV</span>
-          </div>
-          <p class="text-slate-400 mb-4">
-            The premier Web3 marketing agency focused on community building,
-            on-chain marketing, and measurable ecosystem results.
+  <!-- Become A Partner Section -->
+  <section id="partners" class="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="text-3xl sm:text-4xl font-black text-gray-900 mb-6">
+        Become a Partner
+      </h2>
+      <p class="text-lg text-gray-600 mb-8">
+        Partner with UNGODLY ACHV to tap into authentic, organic growth for your
+        Web3 project. Gain access to our AOE network, co-marketing
+        opportunities, and priority support.
+      </p>
+      <div class="flex items-center justify-center gap-4">
+        <a
+          href="https://t.me/Ungodlyachvportfolio "
+          class="inline-block px-6 py-3 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors"
+        >
+          Contact Team
+        </a>
+        <!-- <button
+          (click)="joinTelegram()"
+          class="inline-block px-6 py-3 border border-gray-200 text-gray-900 font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+        >
+          Join Telegram
+        </button> -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Partners Section -->
+  <section class="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+    <div class="max-w-6xl mx-auto">
+      <h2
+        class="text-3xl sm:text-4xl font-black text-gray-900 mb-12 text-center"
+      >
+        Our Partners
+      </h2>
+      <div class="grid md:grid-cols-4 gap-8 items-center justify-center">
+        <!-- Perpgame Partner -->
+        <div class="flex justify-center">
+          <img
+            src="assets/perpgame.png"
+            alt="Perpgame"
+            class="h-16 w-auto object-contain hover:scale-110 transition-transform"
+          />
+        </div>
+        <!-- Add more partners as needed -->
+        <div class="flex justify-center text-gray-400">
+          <!-- <p class="text-sm font-medium">More partners coming soon</p> -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-20 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl mx-auto text-center">
+      <h2 class="text-3xl sm:text-4xl font-black text-gray-900 mb-6">
+        Ready to Get Started?
+      </h2>
+      <p class="text-lg text-gray-600 mb-8">
+        Join hundreds of community builders earning real rewards with UNGODLY
+        ACHV.
+      </p>
+      <button
+        (click)="onBecomeAgent()"
+        class="px-8 py-3 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors text-lg"
+      >
+        Become An Agent Today
+      </button>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-gray-300 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl mx-auto">
+      <div class="grid md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <h3 class="font-bold text-white mb-4">UNGODLY ACHV</h3>
+          <p class="text-sm">
+            Ct's First AOE platform for brands, personal visibility and growth
+            hacking.
           </p>
-          <div class="flex space-x-4">
+          <div class="flex gap-4 mt-6">
             <a
-              href="#"
+              href="https://x.com/AchvUngodly"
               class="text-slate-400 hover:text-white transition-colors"
               >Twitter</a
             ><a
               href="#"
               class="text-slate-400 hover:text-white transition-colors"
               >Discord</a
-            ><a
-              href="#"
-              class="text-slate-400 hover:text-white transition-colors"
-              >Telegram</a
             >
+            <!-- <button
+              (click)="joinTelegram()"
+              class="text-gray-400 hover:text-white transition-colors text-sm font-medium"
+            >
+              Telegram
+            </button> -->
           </div>
         </div>
       </div>
       <div
-        class="border-t border-slate-800 mt-12 pt-8 text-center text-slate-400"
+        class="border-t border-gray-700 pt-8 text-center text-sm text-gray-400"
       >
         <p>&copy; 2026 UNGODLY ACHV. All rights reserved.</p>
       </div>
