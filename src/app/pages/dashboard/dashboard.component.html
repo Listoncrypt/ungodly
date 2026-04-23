@@ -165,6 +165,33 @@
           </div>
         </div>
 
+        <div class="bg-white rounded-lg shadow p-4 sm:p-6 mb-6">
+          <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
+            Upload Media to Backend
+          </h3>
+          <p class="text-sm text-gray-600 mb-4">Upload your videos or images. Only approved users can perform this action.</p>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Upload Image</label>
+              <input type="file" accept="image/*" (change)="uploadFile($event, 'images')" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Upload Video</label>
+              <input type="file" accept="video/*" (change)="uploadFile($event, 'videos')" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100" />
+            </div>
+
+            <div *ngIf="uploading" class="text-blue-600 text-sm font-medium animate-pulse">
+              Uploading... please wait.
+            </div>
+
+            <div *ngIf="uploadSuccessUrl" class="text-green-600 text-sm font-medium">
+              Upload successful! <a [href]="uploadSuccessUrl" target="_blank" class="underline">View file</a>
+            </div>
+          </div>
+        </div>
+
         <div class="bg-white rounded-lg shadow p-4 sm:p-6">
           <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
             Withdrawal Request

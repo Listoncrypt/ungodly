@@ -50,6 +50,26 @@ export class LoginComponent {
     }
   }
 
+  forgotPassword() {
+    const email = this.loginForm.get('email')?.value;
+    if (!email) {
+      this.error = 'Please enter your email first';
+      return;
+    }
+    
+    this.loading = true;
+    this.authService.resetPassword(email).subscribe({
+      next: () => {
+        this.loading = false;
+        alert('Password reset link sent to your email!');
+      },
+      error: (err) => {
+        this.loading = false;
+        this.error = err.message || 'Failed to send reset link';
+      }
+    });
+  }
+
   togglePasswordVisibility() {
     this.showPassword = !this.showPassword;
   }

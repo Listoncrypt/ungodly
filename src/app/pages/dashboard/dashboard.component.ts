@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { SupabaseService } from '../../services/supabase.service';
 
 interface EngagementTask {
   id: string;
@@ -34,12 +35,15 @@ export class DashboardComponent implements OnInit {
   tasksComplete = 5;
   earnings = 2.5;
   withdrawals = 0.0;
+  uploading = false;
+  uploadSuccessUrl = '';
 
   sidebarMenus: SidebarMenu[] = [
     { icon: '📊', label: 'Dashboard', href: '#' },
     { icon: '💰', label: 'My Earnings', href: '#' },
     { icon: '💸', label: 'Withdraw Funds', href: '#' },
     { icon: '⚙️', label: 'Settings', href: '#' },
+    { icon: '🛡️', label: 'Admin', href: '/admin-dashboard' },
   ];
 
   engagementTasks: EngagementTask[] = [
@@ -78,17 +82,27 @@ export class DashboardComponent implements OnInit {
   activeMenu = 'dashboard';
   userInitial = 'X';
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService, 
+    private supabase: SupabaseService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
-    const currentUser = this.authService.getCurrentUser();
-    if (currentUser) {
-      this.username = currentUser.email.split('@')[0];
-      this.verified = currentUser.verified || false;
-      this.boost = currentUser.boost || 0;
-      this.balance = currentUser.balance || 0;
-    }
-    this.userInitial = this.username.charAt(0).toUpperCase();
+    this.authService.currentUser$.subscribe(currentUser => {
+      if (currentUser) {
+        this.username = currentUser.email.split('@')[0];
+        this.verified = currentUser.verified || false;
+        this.boost = currentUser.boost || 0;
+        this.balance = currentUser.balance || 0;
+        this.userInitial = this.username.charAt(0).toUpperCase();
+        
+        // Hide Admin menu if not admin
+        if (currentUser.role !== 'admin') {
+          this.sidebarMenus = this.sidebarMenus.filter(m => m.label !== 'Admin');
+        }
+      }
+    });
   }
 
   engageOnX() {
@@ -103,13 +117,35 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  async uploadFile(event: any, type: 'images'|'videos') {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    this.uploading = true;
+    this.uploadSuccessUrl = '';
+    try {
+      const url = await this.supabase.uploadMedia(type, file);
+      this.uploadSuccessUrl = url;
+    } catch (error) {
+      console.error('Upload failed', error);
+      alert('Upload failed. Check if you are approved.');
+    } finally {
+      this.uploading = false;
+    }
+  }
+
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);
   }
 
   setActiveMenu(menu: string) {
+    if (menu === 'Admin') {
+      this.router.navigate(['/admin-dashboard']);
+      return;
+    }
     this.activeMenu = menu;
   }
 }
+
 
