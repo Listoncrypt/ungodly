@@ -8,153 +8,174 @@ import { SupabaseService, Profile } from '../../services/supabase.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="min-h-screen bg-[#0F172A] text-white p-8">
-      <h1 class="text-3xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-        Admin Dashboard
-      </h1>
-      
-      <div class="bg-[#1E293B] rounded-xl p-6 shadow-xl border border-gray-800">
-        <h2 class="text-xl font-semibold mb-4 text-gray-200">Pending User Approvals</h2>
+    <div class="min-h-screen bg-[#0B0F1A] text-gray-100 p-4 sm:p-8">
+      <div class="max-w-6xl mx-auto space-y-8">
         
-        <div *ngIf="loading" class="text-gray-400">Loading users...</div>
-        
-        <div *ngIf="!loading && unapprovedUsers.length === 0" class="text-green-400 p-4 bg-green-400/10 rounded-lg">
-          No users pending approval. You're all caught up!
+        <!-- Header -->
+        <div class="flex items-center justify-between">
+          <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
+            Admin Management Portal
+          </h1>
+          <div class="px-4 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-sm font-medium">
+            System Admin
+          </div>
         </div>
-        
-        <div *ngIf="!loading && unapprovedUsers.length > 0" class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="border-b border-gray-700 text-gray-400">
-                <th class="p-3">Email</th>
-                <th class="p-3">Role</th>
-                <th class="p-3">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let user of unapprovedUsers" class="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
-                <td class="p-3">{{ user.email }}</td>
-                <td class="p-3">
-                  <span class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-sm">
-                    {{ user.role }}
-                  </span>
-                </td>
-                <td class="p-3">
-                  <button 
-                    (click)="approve(user.id)"
-                    class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all transform hover:scale-105"
-                  >
-                    Approve Access
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- Task Creation Section -->
-      <div class="mt-8 bg-[#1E293B] rounded-xl p-6 shadow-xl border border-gray-800">
-        <h2 class="text-xl font-semibold mb-4 text-gray-200">Create Engagement Task</h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-400 mb-1">Task Title</label>
-            <input type="text" [(ngModel)]="newTask.title" placeholder="e.g. like & retweet @user_x post" 
-                   class="w-full bg-[#0F172A] border border-gray-700 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500">
+        <!-- 1. User Approvals -->
+        <section class="bg-[#161B2B] rounded-2xl border border-gray-800 overflow-hidden shadow-xl">
+          <div class="p-6 border-b border-gray-800 bg-[#1C2237]">
+            <h2 class="text-xl font-bold">Pending Access Requests</h2>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-400 mb-1">Required Actions</label>
-            <input type="text" [(ngModel)]="newTask.actions" placeholder="e.g. like + comment + retweet" 
-                   class="w-full bg-[#0F172A] border border-gray-700 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-400 mb-1">X Post Link (URL)</label>
-            <input type="text" [(ngModel)]="newTask.postLink" placeholder="e.g. https://x.com/user/status/123" 
-                   class="w-full bg-[#0F172A] border border-gray-700 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-400 mb-1">Custom Image URL (Optional)</label>
-            <input type="text" [(ngModel)]="newTask.image" placeholder="Leave blank for auto-preview" 
-                   class="w-full bg-[#0F172A] border border-gray-700 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-400 mb-1">Reward ($)</label>
-            <input type="number" [(ngModel)]="newTask.reward" step="0.1" 
-                   class="w-full bg-[#0F172A] border border-gray-700 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-400 mb-1">Verified Boost ($)</label>
-            <input type="number" [(ngModel)]="newTask.boost" step="0.01" 
-                   class="w-full bg-[#0F172A] border border-gray-700 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500">
-          </div>
-        </div>
-        
-        <button 
-          (click)="createTask()"
-          class="mt-4 bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg text-sm font-medium transition-all"
-        >
-          Publish Task to Agents
-        </button>
+          <div class="p-6">
+            <div *ngIf="loading" class="flex items-center justify-center py-8">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+            
+            <div *ngIf="!loading && unapprovedUsers.length === 0" class="text-center py-12 text-gray-500 italic">
+              All user requests have been processed.
+            </div>
 
-        <!-- List of Existing Tasks -->
-        <div class="mt-8 border-t border-gray-700 pt-6">
-          <h3 class="text-lg font-semibold mb-4 text-gray-300">Existing Tasks</h3>
-          <div *ngIf="existingTasks.length === 0" class="text-gray-500 text-sm">No tasks created yet.</div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div *ngFor="let task of existingTasks" class="bg-[#0F172A] p-4 rounded-lg border border-gray-800 flex justify-between items-start">
-              <div>
-                <p class="font-medium text-sm">{{ task.title }}</p>
-                <p class="text-xs text-gray-500 mt-1">{{ task.actions }}</p>
-                <p class="text-xs text-blue-400 mt-1 font-bold">${{ task.reward }} + ${{ task.boost }} boost</p>
-              </div>
-              <button (click)="deleteTask(task.id)" class="text-red-500 hover:text-red-400 p-1">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
+            <div *ngIf="!loading && unapprovedUsers.length > 0" class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead>
+                  <tr class="text-gray-400 text-sm uppercase tracking-wider">
+                    <th class="pb-4 px-2">User Email</th>
+                    <th class="pb-4 px-2">Role</th>
+                    <th class="pb-4 px-2 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-800">
+                  <tr *ngFor="let user of unapprovedUsers" class="group hover:bg-white/5 transition-colors">
+                    <td class="py-4 px-2">{{ user.email }}</td>
+                    <td class="py-4 px-2">
+                      <span class="text-xs font-mono bg-blue-900/30 text-blue-300 px-2 py-1 rounded">User</span>
+                    </td>
+                    <td class="py-4 px-2 text-right space-x-2">
+                      <button (click)="approve(user.id)" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
+                        Allow
+                      </button>
+                      <button (click)="decline(user.id)" class="bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white px-4 py-2 rounded-lg text-sm font-semibold transition border border-red-600/30">
+                        Decline
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
 
-      <!-- Withdrawal Requests Section -->
-      <div class="mt-8 bg-[#1E293B] rounded-xl p-6 shadow-xl border border-gray-800">
-        <h2 class="text-xl font-semibold mb-4 text-gray-200">Pending Withdrawal Requests</h2>
-        
-        <div *ngIf="loadingWithdrawals" class="text-gray-400">Loading withdrawals...</div>
-        
-        <div *ngIf="!loadingWithdrawals && pendingWithdrawals.length === 0" class="text-green-400 p-4 bg-green-400/10 rounded-lg">
-          No pending withdrawal requests.
+        <!-- 2. Task Management -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          <!-- Create Task Form -->
+          <div class="lg:col-span-1 space-y-6">
+            <section class="bg-[#161B2B] rounded-2xl border border-gray-800 p-6 shadow-xl">
+              <h2 class="text-xl font-bold mb-6">Create New Task</h2>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Title</label>
+                  <input type="text" [(ngModel)]="newTask.title" class="w-full bg-[#0B0F1A] border border-gray-800 rounded-xl p-3 focus:border-blue-500 outline-none transition" placeholder="Like & Retweet...">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 uppercase mb-1">X.com Link</label>
+                  <input type="text" [(ngModel)]="newTask.postLink" class="w-full bg-[#0B0F1A] border border-gray-800 rounded-xl p-3 focus:border-blue-500 outline-none transition" placeholder="https://x.com/...">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Actions Required</label>
+                  <input type="text" [(ngModel)]="newTask.actions" class="w-full bg-[#0B0F1A] border border-gray-800 rounded-xl p-3 focus:border-blue-500 outline-none transition" placeholder="Like + Comment...">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Reward ($)</label>
+                    <input type="number" [(ngModel)]="newTask.reward" class="w-full bg-[#0B0F1A] border border-gray-800 rounded-xl p-3 focus:border-blue-500 outline-none transition">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Boost ($)</label>
+                    <input type="number" [(ngModel)]="newTask.boost" class="w-full bg-[#0B0F1A] border border-gray-800 rounded-xl p-3 focus:border-blue-500 outline-none transition">
+                  </div>
+                </div>
+                <button (click)="createTask()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-900/20 transition">
+                  Publish Task
+                </button>
+              </div>
+            </section>
+          </div>
+
+          <!-- Existing Tasks List -->
+          <div class="lg:col-span-2">
+            <section class="bg-[#161B2B] rounded-2xl border border-gray-800 overflow-hidden shadow-xl h-full">
+              <div class="p-6 border-b border-gray-800 bg-[#1C2237] flex justify-between items-center">
+                <h2 class="text-xl font-bold">Active Tasks</h2>
+                <span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded-full">{{ existingTasks.length }} Total</span>
+              </div>
+              <div class="p-6">
+                <div *ngIf="existingTasks.length === 0" class="text-center py-12 text-gray-500 italic">
+                  No tasks have been published yet.
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div *ngFor="let task of existingTasks" class="bg-[#0B0F1A] p-4 rounded-2xl border border-gray-800 group relative">
+                    <button (click)="deleteTask(task.id)" class="absolute top-2 right-2 text-gray-600 hover:text-red-500 transition-colors p-2">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                    <div class="pr-8">
+                      <h3 class="font-bold text-sm mb-1 truncate">{{ task.title }}</h3>
+                      <p class="text-xs text-gray-500 mb-2 truncate">{{ task.actions }}</p>
+                      <div class="flex items-center gap-3">
+                        <span class="text-xs font-bold text-blue-400">Reward: \${{ task.reward }}</span>
+                        <span class="text-xs font-bold text-green-500">Boost: \${{ task.boost }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
-        
-        <div *ngIf="!loadingWithdrawals && pendingWithdrawals.length > 0" class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="border-b border-gray-700 text-gray-400">
-                <th class="p-3">Email</th>
-                <th class="p-3">Amount</th>
-                <th class="p-3">Solana Address</th>
-                <th class="p-3">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let withdrawal of pendingWithdrawals" class="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
-                <td class="p-3">{{ withdrawal.email }}</td>
-                <td class="p-3 font-bold text-green-400">${{ withdrawal.amount }}</td>
-                <td class="p-3 text-xs font-mono text-gray-300 break-all max-w-[200px]">{{ withdrawal.solana_address }}</td>
-                <td class="p-3">
-                  <button 
-                    (click)="markAsPaid(withdrawal.id)"
-                    class="bg-green-600 hover:bg-green-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                  >
-                    Mark as Paid
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+
+        <!-- 3. Withdrawal Requests -->
+        <section class="bg-[#161B2B] rounded-2xl border border-gray-800 overflow-hidden shadow-xl">
+          <div class="p-6 border-b border-gray-800 bg-[#1C2237]">
+            <h2 class="text-xl font-bold">Withdrawal Queue</h2>
+          </div>
+          <div class="p-6">
+            <div *ngIf="loadingWithdrawals" class="flex items-center justify-center py-8">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+            </div>
+            
+            <div *ngIf="!loadingWithdrawals && pendingWithdrawals.length === 0" class="text-center py-12 text-gray-500 italic">
+              No pending withdrawals.
+            </div>
+
+            <div *ngIf="!loadingWithdrawals && pendingWithdrawals.length > 0" class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead>
+                  <tr class="text-gray-400 text-sm uppercase tracking-wider">
+                    <th class="pb-4 px-2">User Email</th>
+                    <th class="pb-4 px-2">Amount</th>
+                    <th class="pb-4 px-2">Solana Wallet</th>
+                    <th class="pb-4 px-2 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-800">
+                  <tr *ngFor="let w of pendingWithdrawals" class="hover:bg-white/5 transition-colors">
+                    <td class="py-4 px-2 text-sm">{{ w.email }}</td>
+                    <td class="py-4 px-2 font-bold text-green-400">\${{ w.amount }}</td>
+                    <td class="py-4 px-2 text-xs font-mono text-gray-400 break-all max-w-[180px]">{{ w.solana_address }}</td>
+                    <td class="py-4 px-2 text-right">
+                      <button (click)="markAsPaid(w.id)" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-lg shadow-green-900/20 transition">
+                        Mark Paid
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
       </div>
     </div>
   `
@@ -166,7 +187,6 @@ export class AdminDashboardComponent implements OnInit {
   loading = true;
   loadingWithdrawals = true;
   
-  // Task Creation Form
   newTask = {
     title: '',
     image: '',
@@ -217,9 +237,23 @@ export class AdminDashboardComponent implements OnInit {
     try {
       await this.supabase.approveUser(userId);
       this.unapprovedUsers = this.unapprovedUsers.filter(u => u.id !== userId);
+      alert('User access granted!');
     } catch (error) {
       console.error('Error approving user:', error);
       alert('Failed to approve user');
+    }
+  }
+
+  async decline(userId: string) {
+    if (confirm('Are you sure you want to decline this user? This will remove their request.')) {
+      try {
+        await this.supabase.declineUser(userId);
+        this.unapprovedUsers = this.unapprovedUsers.filter(u => u.id !== userId);
+        alert('User request declined and removed.');
+      } catch (error) {
+        console.error('Error declining user:', error);
+        alert('Failed to decline user');
+      }
     }
   }
 
@@ -241,11 +275,10 @@ export class AdminDashboardComponent implements OnInit {
     }
 
     let finalImage = this.newTask.image;
-    // If no image is provided but there is a postLink, use microlink to get a screenshot
     if (!finalImage && this.newTask.postLink) {
       finalImage = `https://api.microlink.io/?url=${encodeURIComponent(this.newTask.postLink)}&screenshot=true&meta=false&embed=screenshot.url`;
     } else if (!finalImage) {
-      finalImage = 'image_0.png'; // Fallback
+      finalImage = 'image_0.png';
     }
 
     const task = {
@@ -258,11 +291,6 @@ export class AdminDashboardComponent implements OnInit {
     let tasks = [];
     if (saved) {
       tasks = JSON.parse(saved);
-    } else {
-      // Load default tasks if starting fresh
-      tasks = [
-        { id: '1', title: 'like & retweet @user_x post', image: 'image_0.png', reward: 0.5, boost: 0.05, actions: 'like + comment + retweet' }
-      ];
     }
 
     tasks.unshift(task);
@@ -272,6 +300,7 @@ export class AdminDashboardComponent implements OnInit {
     alert('Task successfully uploaded to the dashboard!');
     this.newTask.title = '';
     this.newTask.actions = '';
+    this.newTask.postLink = '';
   }
 
   deleteTask(id: string) {

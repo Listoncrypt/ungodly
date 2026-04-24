@@ -85,6 +85,16 @@ export class SupabaseService {
     return data;
   }
 
+  async declineUser(userId: string) {
+    const { data, error } = await this.supabase
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
+      
+    if (error) throw error;
+    return data;
+  }
+
   async uploadMedia(bucket: 'images' | 'videos', file: File): Promise<string> {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;

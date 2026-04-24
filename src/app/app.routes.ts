@@ -18,6 +18,11 @@ export const routes: Routes = [
       import('./pages/login/login.component').then((m) => m.LoginComponent),
   },
   {
+    path: 'waiting-approval',
+    loadComponent: () =>
+      import('./pages/waiting-approval/waiting-approval.component').then((m) => m.WaitingApprovalComponent),
+  },
+  {
     path: 'auth/twitter/callback',
     loadComponent: () =>
       import('./pages/twitter-callback/twitter-callback.component').then(

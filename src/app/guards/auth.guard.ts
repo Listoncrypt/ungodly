@@ -39,8 +39,7 @@ export class AuthGuard implements CanActivate {
         }
 
         // Authenticated but not approved
-        alert('Your account is currently waiting for admin approval. You will be able to access the dashboard once approved.');
-        this.router.navigate(['/login']);
+        this.router.navigate(['/waiting-approval']);
         return false;
       })
     );
