@@ -97,12 +97,53 @@ import { SupabaseService, Profile } from '../../services/supabase.service';
           Publish Task to Agents
         </button>
       </div>
+
+      <!-- Withdrawal Requests Section -->
+      <div class="mt-8 bg-[#1E293B] rounded-xl p-6 shadow-xl border border-gray-800">
+        <h2 class="text-xl font-semibold mb-4 text-gray-200">Pending Withdrawal Requests</h2>
+        
+        <div *ngIf="loadingWithdrawals" class="text-gray-400">Loading withdrawals...</div>
+        
+        <div *ngIf="!loadingWithdrawals && pendingWithdrawals.length === 0" class="text-green-400 p-4 bg-green-400/10 rounded-lg">
+          No pending withdrawal requests.
+        </div>
+        
+        <div *ngIf="!loadingWithdrawals && pendingWithdrawals.length > 0" class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-gray-700 text-gray-400">
+                <th class="p-3">Email</th>
+                <th class="p-3">Amount</th>
+                <th class="p-3">Solana Address</th>
+                <th class="p-3">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let withdrawal of pendingWithdrawals" class="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
+                <td class="p-3">{{ withdrawal.email }}</td>
+                <td class="p-3 font-bold text-green-400">${{ withdrawal.amount }}</td>
+                <td class="p-3 text-xs font-mono text-gray-300 break-all max-w-[200px]">{{ withdrawal.solana_address }}</td>
+                <td class="p-3">
+                  <button 
+                    (click)="markAsPaid(withdrawal.id)"
+                    class="bg-green-600 hover:bg-green-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                  >
+                    Mark as Paid
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   `
 })
 export class AdminDashboardComponent implements OnInit {
   unapprovedUsers: Profile[] = [];
+  pendingWithdrawals: any[] = [];
   loading = true;
+  loadingWithdrawals = true;
   
   // Task Creation Form
   newTask = {
@@ -118,6 +159,7 @@ export class AdminDashboardComponent implements OnInit {
 
   ngOnInit() {
     this.loadUsers();
+    this.loadWithdrawals();
   }
 
   async loadUsers() {
@@ -131,6 +173,17 @@ export class AdminDashboardComponent implements OnInit {
     }
   }
 
+  async loadWithdrawals() {
+    this.loadingWithdrawals = true;
+    try {
+      this.pendingWithdrawals = await this.supabase.getPendingWithdrawals();
+    } catch (error) {
+      console.error('Error loading withdrawals:', error);
+    } finally {
+      this.loadingWithdrawals = false;
+    }
+  }
+
   async approve(userId: string) {
     try {
       await this.supabase.approveUser(userId);
@@ -138,6 +191,17 @@ export class AdminDashboardComponent implements OnInit {
     } catch (error) {
       console.error('Error approving user:', error);
       alert('Failed to approve user');
+    }
+  }
+
+  async markAsPaid(id: string) {
+    try {
+      await this.supabase.processWithdrawal(id);
+      this.pendingWithdrawals = this.pendingWithdrawals.filter(w => w.id !== id);
+      alert('Withdrawal marked as completed!');
+    } catch (error) {
+      console.error('Error processing withdrawal:', error);
+      alert('Failed to process withdrawal');
     }
   }
 

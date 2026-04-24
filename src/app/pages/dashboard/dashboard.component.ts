@@ -143,7 +143,7 @@ export class DashboardComponent implements OnInit {
     }, 2000);
   }
 
-  submitWithdrawal() {
+  async submitWithdrawal() {
     if (this.withdrawalForm.amount < 40) {
       alert('Minimum withdrawal is $40.');
       return;
@@ -157,13 +157,20 @@ export class DashboardComponent implements OnInit {
       return;
     }
     
-    this.balance -= this.withdrawalForm.amount;
-    this.withdrawals += this.withdrawalForm.amount;
-    
-    alert(`Withdrawal of $${this.withdrawalForm.amount} to ${this.withdrawalForm.solanaAddress} submitted successfully!`);
-    
-    this.withdrawalForm.amount = 40;
-    this.withdrawalForm.solanaAddress = '';
+    try {
+      await this.supabase.createWithdrawal(this.withdrawalForm.amount, this.withdrawalForm.solanaAddress);
+      
+      this.balance -= this.withdrawalForm.amount;
+      this.withdrawals += this.withdrawalForm.amount;
+      
+      alert(`Withdrawal of $${this.withdrawalForm.amount} to ${this.withdrawalForm.solanaAddress} submitted successfully!`);
+      
+      this.withdrawalForm.amount = 40;
+      this.withdrawalForm.solanaAddress = '';
+    } catch (error) {
+      console.error('Withdrawal failed', error);
+      alert('Failed to submit withdrawal request. Please check if your account is fully verified.');
+    }
   }
 
   async uploadFile(event: any, type: 'images'|'videos') {

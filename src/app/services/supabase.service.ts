@@ -102,5 +102,44 @@ export class SupabaseService {
 
     return data.publicUrl;
   }
+
+  async createWithdrawal(amount: number, solanaAddress: string) {
+    const { data, error } = await this.supabase
+      .from('withdrawals')
+      .insert([
+        {
+          user_id: this.currentUser?.id,
+          email: this.currentUser?.email,
+          amount: amount,
+          solana_address: solanaAddress,
+          status: 'pending',
+          created_at: new Date().toISOString()
+        }
+      ]);
+
+    if (error) throw error;
+    return data;
+  }
+
+  async getPendingWithdrawals() {
+    const { data, error } = await this.supabase
+      .from('withdrawals')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
+  }
+
+  async processWithdrawal(id: string) {
+    const { data, error } = await this.supabase
+      .from('withdrawals')
+      .update({ status: 'completed' })
+      .eq('id', id);
+
+    if (error) throw error;
+    return data;
+  }
 }
 
