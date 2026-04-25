@@ -41,6 +41,7 @@ import { SupabaseService, Profile } from '../../services/supabase.service';
                   <tr class="text-gray-400 text-sm uppercase tracking-wider">
                     <th class="pb-4 px-2">User Email</th>
                     <th class="pb-4 px-2">Role</th>
+                    <th class="pb-4 px-2">Followers</th>
                     <th class="pb-4 px-2 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -49,6 +50,9 @@ import { SupabaseService, Profile } from '../../services/supabase.service';
                     <td class="py-4 px-2">{{ user.email }}</td>
                     <td class="py-4 px-2">
                       <span class="text-xs font-mono bg-blue-900/30 text-blue-300 px-2 py-1 rounded">User</span>
+                    </td>
+                    <td class="py-4 px-2 font-bold text-gray-300">
+                      {{ user.twitter_followers || 0 | number }}
                     </td>
                     <td class="py-4 px-2 text-right space-x-2">
                       <button (click)="approve(user.id)" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
@@ -154,6 +158,7 @@ import { SupabaseService, Profile } from '../../services/supabase.service';
                 <thead>
                   <tr class="text-gray-400 text-sm uppercase tracking-wider">
                     <th class="pb-4 px-2">User Email</th>
+                    <th class="pb-4 px-2">Twitter</th>
                     <th class="pb-4 px-2">Amount</th>
                     <th class="pb-4 px-2">Solana Wallet</th>
                     <th class="pb-4 px-2 text-right">Actions</th>
@@ -162,6 +167,7 @@ import { SupabaseService, Profile } from '../../services/supabase.service';
                 <tbody class="divide-y divide-gray-800">
                   <tr *ngFor="let w of pendingWithdrawals" class="hover:bg-white/5 transition-colors">
                     <td class="py-4 px-2 text-sm">{{ w.email }}</td>
+                    <td class="py-4 px-2 text-sm text-blue-400">{{ w.twitter_handle || 'N/A' }}</td>
                     <td class="py-4 px-2 font-bold text-green-400">\${{ w.amount }}</td>
                     <td class="py-4 px-2 text-xs font-mono text-gray-400 break-all max-w-[180px]">{{ w.solana_address }}</td>
                     <td class="py-4 px-2 text-right">
@@ -204,10 +210,11 @@ export class AdminDashboardComponent implements OnInit {
     this.loadTasks();
   }
 
-  loadTasks() {
-    const saved = localStorage.getItem('admin_tasks');
-    if (saved) {
-      this.existingTasks = JSON.parse(saved);
+  async loadTasks() {
+    try {
+      this.existingTasks = await this.supabase.getTasks();
+    } catch (error) {
+      console.error('Error loading tasks:', error);
     }
   }
 
@@ -268,7 +275,7 @@ export class AdminDashboardComponent implements OnInit {
     }
   }
 
-  createTask() {
+  async createTask() {
     if (!this.newTask.title || !this.newTask.actions) {
       alert('Please fill out task title and actions.');
       return;
@@ -281,36 +288,38 @@ export class AdminDashboardComponent implements OnInit {
       finalImage = 'image_0.png';
     }
 
-    const task = {
-      id: Math.random().toString(36).substr(2, 9),
-      ...this.newTask,
+    const taskData = {
+      title: this.newTask.title,
+      post_link: this.newTask.postLink,
+      actions: this.newTask.actions,
+      reward: this.newTask.reward,
+      boost: this.newTask.boost,
       image: finalImage
     };
 
-    const saved = localStorage.getItem('admin_tasks');
-    let tasks = [];
-    if (saved) {
-      tasks = JSON.parse(saved);
+    try {
+      const newTask = await this.supabase.createPlatformTask(taskData);
+      this.existingTasks.unshift(newTask);
+      
+      alert('Task successfully uploaded to the dashboard!');
+      this.newTask.title = '';
+      this.newTask.actions = '';
+      this.newTask.postLink = '';
+      this.newTask.image = '';
+    } catch (error) {
+      console.error('Failed to create task:', error);
+      alert('Failed to publish task.');
     }
-
-    tasks.unshift(task);
-    localStorage.setItem('admin_tasks', JSON.stringify(tasks));
-    this.existingTasks = tasks;
-    
-    alert('Task successfully uploaded to the dashboard!');
-    this.newTask.title = '';
-    this.newTask.actions = '';
-    this.newTask.postLink = '';
   }
 
-  deleteTask(id: string) {
+  async deleteTask(id: string) {
     if (confirm('Are you sure you want to delete this task?')) {
-      const saved = localStorage.getItem('admin_tasks');
-      if (saved) {
-        let tasks = JSON.parse(saved);
-        tasks = tasks.filter((t: any) => t.id !== id);
-        localStorage.setItem('admin_tasks', JSON.stringify(tasks));
-        this.existingTasks = tasks;
+      try {
+        await this.supabase.deletePlatformTask(id);
+        this.existingTasks = this.existingTasks.filter((t: any) => t.id !== id);
+      } catch (error) {
+        console.error('Failed to delete task:', error);
+        alert('Failed to delete task');
       }
     }
   }

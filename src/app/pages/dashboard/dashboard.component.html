@@ -65,6 +65,25 @@
       </div>
     </div>
 
+    <!-- Platform Stats Banner -->
+    <div class="bg-slate-900 rounded-lg shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 text-white">
+      <h3 class="text-center text-slate-300 text-sm font-semibold uppercase tracking-widest mb-4">Platform Overview</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 divide-y md:divide-y-0 md:divide-x divide-slate-700">
+        <div class="text-center px-4 py-2">
+          <p class="text-slate-400 text-xs sm:text-sm">Total Approved Creators</p>
+          <p class="text-3xl sm:text-4xl font-black mt-1 text-white">
+            {{ totalCreators | number }}
+          </p>
+        </div>
+        <div class="text-center px-4 py-2">
+          <p class="text-slate-400 text-xs sm:text-sm">Total Agent Earnings</p>
+          <p class="text-3xl sm:text-4xl font-black mt-1 text-green-400">
+            ${{ totalPlatformEarnings | number:'1.2-2' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
     <div class="bg-white rounded-lg shadow p-4 sm:p-6 mb-6 sm:mb-8">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         <div class="text-center px-4 py-5">

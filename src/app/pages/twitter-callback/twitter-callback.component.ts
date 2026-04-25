@@ -34,35 +34,30 @@ export class TwitterCallbackComponent implements OnInit {
 
   private processTwitterCallback(): void {
     const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    const state = params.get('state');
-    const error = params.get('error');
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const error = params.get('error') || hashParams.get('error');
+    const errorDescription = params.get('error_description') || hashParams.get('error_description');
 
     if (error) {
-      console.error('Twitter OAuth error:', error, params.get('error_description'));
+      console.error('Twitter OAuth error:', error, errorDescription);
       this.router.navigate(['/signup'], { queryParams: { error: 'twitter_auth_failed' } });
       return;
     }
 
-    if (!code) {
-      console.error('No authorization code received');
-      this.router.navigate(['/signup'], { queryParams: { error: 'no_code' } });
-      return;
-    }
-
-    // Supabase handles PKCE and state verification automatically.
-    // We just need to let it process the session and then redirect.
-
-    this.authService.exchangeCodeForToken(code).subscribe({
-      next: () => {
-        window.history.replaceState({}, document.title, window.location.pathname);
-        this.router.navigate(['/signup'], { queryParams: { twitter_success: 'true' } });
-      },
-      error: (err) => {
-        console.error('Twitter authentication failed:', err);
-        window.history.replaceState({}, document.title, window.location.pathname);
-        this.router.navigate(['/signup'], { queryParams: { error: 'auth_failed' } });
-      },
-    });
+    // Supabase handles the token extraction from the URL fragment automatically.
+    // We wait briefly to ensure the client has finished parsing the URL and storing the session.
+    setTimeout(() => {
+      this.authService.exchangeCodeForToken('').subscribe({
+        next: () => {
+          window.history.replaceState({}, document.title, window.location.pathname);
+          this.router.navigate(['/signup'], { queryParams: { twitter_success: 'true' } });
+        },
+        error: (err) => {
+          console.error('Twitter authentication failed:', err);
+          window.history.replaceState({}, document.title, window.location.pathname);
+          this.router.navigate(['/signup'], { queryParams: { error: 'auth_failed' } });
+        },
+      });
+    }, 500);
   }
 }

@@ -109,19 +109,19 @@
       </div>
     </div>
 
+    <div
+      *ngIf="error"
+      class="rounded-md bg-red-50 p-4 border border-red-200 mt-6"
+    >
+      <p class="text-sm font-medium text-red-800">{{ error }}</p>
+    </div>
+
     <form
       *ngIf="twitterConnected"
       [formGroup]="signupForm"
       (ngSubmit)="onSubmit()"
       class="mt-8 space-y-6"
     >
-      <div
-        *ngIf="error"
-        class="rounded-md bg-slate-100 p-4 border border-slate-300"
-      >
-        <p class="text-sm font-medium text-slate-700">{{ error }}</p>
-      </div>
-
       <div class="space-y-4">
         <div>
           <label

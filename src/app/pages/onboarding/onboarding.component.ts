@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 interface ChecklistItem {
@@ -26,7 +26,7 @@ export class OnboardingComponent implements OnInit {
     { id: 'dashboard', label: 'Start earning on dashboard', completed: false },
   ];
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   ngOnInit() {
     // Mark signup as completed since user is authenticated
@@ -53,5 +53,6 @@ export class OnboardingComponent implements OnInit {
     // Mark dashboard task as completed
     this.checklist[2].completed = true;
     console.log('Proceeding to dashboard...');
+    this.router.navigate(['/dashboard']);
   }
 }

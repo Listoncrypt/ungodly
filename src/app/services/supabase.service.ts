@@ -10,6 +10,20 @@ export interface Profile {
   avatar_url?: string;
   role: 'user' | 'admin';
   is_approved: boolean;
+  twitter_followers?: number;
+  twitter_handle?: string;
+  balance?: number;
+}
+
+export interface PlatformTask {
+  id: string;
+  title: string;
+  image: string;
+  post_link: string;
+  actions: string;
+  reward: number;
+  boost: number;
+  created_at?: string;
 }
 
 @Injectable({
@@ -62,6 +76,20 @@ export class SupabaseService {
     } else {
       this.currentProfileSubject.next(null);
     }
+  }
+
+  async updateProfile(id: string, updates: Partial<Profile>) {
+    const { data, error } = await this.supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', id);
+
+    if (error) throw error;
+    
+    if (this.currentProfile?.id === id) {
+      this.currentProfileSubject.next({ ...this.currentProfile, ...updates } as Profile);
+    }
+    return data;
   }
 
   async getUnapprovedUsers() {
@@ -120,6 +148,7 @@ export class SupabaseService {
         {
           user_id: this.currentUser?.id,
           email: this.currentUser?.email,
+          twitter_handle: this.currentProfile?.twitter_handle,
           amount: amount,
           solana_address: solanaAddress,
           status: 'pending',
@@ -150,6 +179,66 @@ export class SupabaseService {
 
     if (error) throw error;
     return data;
+  }
+
+  async getPlatformStats() {
+    const { count: creatorsCount, error: countError } = await this.supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_approved', true)
+      .eq('role', 'user');
+
+    if (countError) console.error('Error fetching creators count', countError);
+
+    const { data: profiles, error: sumError } = await this.supabase
+      .from('profiles')
+      .select('balance')
+      .eq('is_approved', true)
+      .eq('role', 'user');
+
+    if (sumError) console.error('Error fetching balances', sumError);
+
+    const totalEarnings = profiles?.reduce((sum, p) => sum + (p.balance || 0), 0) || 0;
+
+    return {
+      totalCreators: creatorsCount || 0,
+      totalEarnings
+    };
+  }
+
+  // --- Tasks Management ---
+
+  async getTasks(): Promise<PlatformTask[]> {
+    const { data, error } = await this.supabase
+      .from('tasks')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching tasks', error);
+      return [];
+    }
+    return data as PlatformTask[];
+  }
+
+  async createPlatformTask(task: Omit<PlatformTask, 'id' | 'created_at'>) {
+    const { data, error } = await this.supabase
+      .from('tasks')
+      .insert([task])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async deletePlatformTask(id: string) {
+    const { error } = await this.supabase
+      .from('tasks')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
   }
 }
 

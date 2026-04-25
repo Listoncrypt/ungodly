@@ -34,6 +34,11 @@ export class AuthGuard implements CanActivate {
           return true;
         }
 
+        // Allow unapproved users to access the onboarding page
+        if (state.url.includes('/onboarding')) {
+          return true;
+        }
+
         // Check if user is approved
         if (user.is_approved) {
           return true;

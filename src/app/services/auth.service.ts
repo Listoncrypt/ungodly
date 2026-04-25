@@ -14,6 +14,7 @@ export interface User {
   balance?: number;
   role?: string;
   is_approved?: boolean;
+  followersCount?: number;
 }
 
 @Injectable({
@@ -97,7 +98,8 @@ export class AuthService {
     const { error } = await this.supabaseService.client.auth.signInWithOAuth({
       provider: 'x',
       options: {
-        redirectTo: `${window.location.origin}/auth/twitter/callback`
+        redirectTo: `${window.location.origin}/auth/twitter/callback`,
+        scopes: 'users.read tweet.read'
       }
     });
     if (error) console.error('Error with Twitter Auth', error);
@@ -123,11 +125,49 @@ export class AuthService {
     this.currentUserSubject.next(user);
   }
 
-  logout(): void {
-    this.supabaseService.client.auth.signOut().then(() => {
+  logout(redirect: boolean = true): Promise<void> {
+    return this.supabaseService.client.auth.signOut().then(() => {
       this.currentUserSubject.next(null);
       localStorage.removeItem('currentUser');
-      this.router.navigate(['/login']);
+      if (redirect) {
+        this.router.navigate(['/login']);
+      }
     });
+  }
+
+  async getTwitterFollowers(): Promise<{ followersCount: number, isVerified: boolean } | null> {
+    const { data: { session } } = await this.supabaseService.client.auth.getSession();
+    const providerToken = session?.provider_token;
+    
+    if (!providerToken) {
+      console.warn('No Twitter provider token found in session.');
+      return null;
+    }
+
+    try {
+      // Twitter API blocks direct browser requests due to CORS. 
+      // We use a safe, open CORS proxy for development to bypass this limitation.
+      const targetUrl = 'https://api.twitter.com/2/users/me?user.fields=public_metrics,verified';
+      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+      
+      const response = await fetch(proxyUrl, {
+        headers: {
+          'Authorization': `Bearer ${providerToken}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Twitter API error: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return {
+        followersCount: data.data?.public_metrics?.followers_count ?? 0,
+        isVerified: data.data?.verified ?? false
+      };
+    } catch (error) {
+      console.error('Error fetching Twitter followers:', error);
+      return null;
+    }
   }
 }

@@ -12,7 +12,7 @@ export interface EngagementTask {
   reward: number;
   boost: number;
   actions: string;
-  postLink?: string;
+  post_link?: string;
 }
 
 interface SidebarMenu {
@@ -37,37 +37,15 @@ export class DashboardComponent implements OnInit {
   earnings = 0.0;
   withdrawals = 0.0;
 
+  totalCreators = 0;
+  totalPlatformEarnings = 0.0;
+
   sidebarMenus: SidebarMenu[] = [
     { icon: '📊', label: 'Dashboard', href: '#' },
     { icon: '🛡️', label: 'Admin', href: '/admin-dashboard' },
   ];
 
-  engagementTasks: EngagementTask[] = [
-    {
-      id: '1',
-      title: 'like & retweet @user_x post',
-      image: 'image_0.png',
-      reward: 0.5,
-      boost: 0.05,
-      actions: 'like + comment + retweet + bookmark @user_x',
-    },
-    {
-      id: '2',
-      title: 'like & retweet @user_x post',
-      image: 'image_0.png',
-      reward: 0.5,
-      boost: 0.05,
-      actions: 'like + comment + retweet + bookmark @user_x',
-    },
-    {
-      id: '3',
-      title: 'like & retweet @user_x post',
-      image: 'image_0.png',
-      reward: 0.5,
-      boost: 0.05,
-      actions: 'like + comment + retweet + bookmark @user_x',
-    },
-  ];
+  engagementTasks: EngagementTask[] = [];
 
   showWithdrawal = false;
   withdrawalForm = {
@@ -105,18 +83,24 @@ export class DashboardComponent implements OnInit {
         }
       }
     });
+
+    this.supabase.getPlatformStats().then(stats => {
+      this.totalCreators = stats.totalCreators;
+      this.totalPlatformEarnings = stats.totalEarnings;
+    });
   }
 
-  loadTasks() {
-    const saved = localStorage.getItem('admin_tasks');
-    if (saved) {
-      this.engagementTasks = JSON.parse(saved);
+  async loadTasks() {
+    try {
+      this.engagementTasks = await this.supabase.getTasks();
+    } catch (error) {
+      console.error('Failed to load tasks', error);
     }
   }
 
   engageOnX(task: EngagementTask) {
-    console.log('Opening X (Twitter)...', task.postLink);
-    window.open(task.postLink || 'https://x.com', '_blank');
+    console.log('Opening X (Twitter)...', task.post_link);
+    window.open(task.post_link || 'https://x.com', '_blank');
     
     // Simulate validation and task completion
     setTimeout(() => {
