@@ -52,7 +52,7 @@ export class SignupComponent implements OnInit {
     const twitterData = await this.authService.getTwitterFollowers();
     
     if (twitterData === null) {
-      this.error = 'Failed to fetch Twitter follower count. This usually means you are using OAuth 1.0a instead of OAuth 2.0 in Supabase, or lack the correct API permissions.';
+      this.error = 'Unable to verify your X/Twitter followers. Please ensure your account has public metrics visible or try reconnecting. Note: We require OAuth 2.0 with "users.read" permissions.';
       this.loading = false;
       this.disconnectTwitter();
       return;

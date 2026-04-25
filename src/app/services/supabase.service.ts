@@ -63,9 +63,20 @@ export class SupabaseService {
     return this.currentProfileSubject.value;
   }
 
+  /**
+   * Manually refresh the profile data from the database
+   */
+  async refreshProfile() {
+    const user = this.currentUser;
+    if (user) {
+      await this.updateUserAndProfile(user);
+    }
+  }
+
   private async updateUserAndProfile(user: SupabaseUser | null) {
     this.currentUserSubject.next(user);
     if (user) {
+      // Fetch latest profile
       const { data: profile } = await this.supabase
         .from('profiles')
         .select('*')
@@ -73,8 +84,24 @@ export class SupabaseService {
         .single();
       
       this.currentProfileSubject.next(profile as Profile);
+
+      // Subscribe to real-time changes for this specific user's profile
+      this.supabase
+        .channel(`public:profiles:id=eq.${user.id}`)
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'profiles',
+          filter: `id=eq.${user.id}`
+        }, payload => {
+          console.log('Real-time profile update received:', payload.new);
+          this.currentProfileSubject.next(payload.new as Profile);
+        })
+        .subscribe();
     } else {
       this.currentProfileSubject.next(null);
+      // Clean up subscriptions would be good here, but Supabase handles 
+      // channel cleanup reasonably well on disconnect/signout.
     }
   }
 

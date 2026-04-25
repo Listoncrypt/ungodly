@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-waiting-approval',
@@ -24,11 +25,19 @@ import { AuthService } from '../../services/auth.service';
 
         <div class="space-y-4">
           <a 
-            href="https://t.me/Ungodlyachvportfolio" 
+            href="https://t.me/+3rl2v5b7H-9mNDFk" 
             target="_blank"
             class="block w-full bg-[#229ED9] hover:bg-[#229ED9]/90 text-white font-semibold py-3 px-6 rounded-xl transition-all transform hover:scale-[1.02]"
           >
-            Join Telegram Community
+            Join agent channel for task reminders
+          </a>
+
+          <a 
+            href="https://t.me/Iamhimtrueraver" 
+            target="_blank"
+            class="block w-full bg-white/5 hover:bg-white/10 text-white font-medium py-3 px-6 rounded-xl border border-white/10 transition-all"
+          >
+            Contact Team
           </a>
           
           <button 
@@ -46,8 +55,26 @@ import { AuthService } from '../../services/auth.service';
     </div>
   `
 })
-export class WaitingApprovalComponent {
-  constructor(private authService: AuthService) {}
+export class WaitingApprovalComponent implements OnInit, OnDestroy {
+  private authSubscription: Subscription | null = null;
+
+  constructor(private authService: AuthService, private router: Router) {}
+
+  ngOnInit() {
+    // Subscribe to auth changes to automatically redirect when approved
+    this.authSubscription = this.authService.currentUser$.subscribe(user => {
+      if (user?.is_approved || user?.role === 'admin') {
+        console.log('User approved, redirecting to dashboard...');
+        this.router.navigate(['/dashboard']);
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.authSubscription) {
+      this.authSubscription.unsubscribe();
+    }
+  }
 
   logout() {
     this.authService.logout();

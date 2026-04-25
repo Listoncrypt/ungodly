@@ -138,35 +138,113 @@ export class AuthService {
   async getTwitterFollowers(): Promise<{ followersCount: number, isVerified: boolean } | null> {
     const { data: { session } } = await this.supabaseService.client.auth.getSession();
     const providerToken = session?.provider_token;
+    const userMetadata = session?.user?.user_metadata;
+
+    console.log('Session metadata:', userMetadata);
     
+    // Check various possible metadata paths for follower count
+    const getFollowersFromMetadata = () => {
+      // Check standard Supabase/Twitter metadata paths
+      const paths = [
+        userMetadata?.['followers_count'],
+        userMetadata?.['public_metrics']?.['followers_count'],
+        userMetadata?.['data']?.['public_metrics']?.['followers_count'],
+        userMetadata?.['user_metadata']?.['followers_count']
+      ];
+      return paths.find(p => p !== undefined);
+    };
+
+    const getVerifiedFromMetadata = () => {
+      const paths = [
+        userMetadata?.['verified'],
+        userMetadata?.['data']?.['verified'],
+        userMetadata?.['user_metadata']?.['verified']
+      ];
+      return paths.find(p => p !== undefined) || false;
+    };
+
+    const metadataFollowers = getFollowersFromMetadata();
+    
+    // If we already have the data in metadata, use it immediately! 
+    // This avoids CORS/Proxy issues entirely.
+    if (metadataFollowers !== undefined && metadataFollowers >= 1000) {
+      console.log('Using follower count from metadata:', metadataFollowers);
+      return {
+        followersCount: metadataFollowers,
+        isVerified: getVerifiedFromMetadata()
+      };
+    }
+
     if (!providerToken) {
       console.warn('No Twitter provider token found in session.');
+      if (metadataFollowers !== undefined) {
+        return {
+          followersCount: metadataFollowers,
+          isVerified: getVerifiedFromMetadata()
+        };
+      }
       return null;
     }
 
     try {
-      // Twitter API blocks direct browser requests due to CORS. 
-      // We use a safe, open CORS proxy for development to bypass this limitation.
       const targetUrl = 'https://api.twitter.com/2/users/me?user.fields=public_metrics,verified';
-      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
       
-      const response = await fetch(proxyUrl, {
-        headers: {
-          'Authorization': `Bearer ${providerToken}`
+      // Try fetching with a different proxy if the first one fails
+      const proxies = [
+        (url: string) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+        (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`
+      ];
+
+      for (const getProxyUrl of proxies) {
+        try {
+          const proxyUrl = getProxyUrl(targetUrl);
+          console.log(`Attempting fetch via proxy: ${proxyUrl}`);
+          
+          const response = await fetch(proxyUrl, {
+            headers: {
+              'Authorization': `Bearer ${providerToken}`
+            }
+          });
+          
+          if (!response.ok) continue;
+
+          let data;
+          const text = await response.text();
+          try {
+            const json = JSON.parse(text);
+            // AllOrigins wraps the response in a "contents" field
+            data = json.contents ? JSON.parse(json.contents) : json;
+          } catch (e) {
+            continue;
+          }
+
+          if (data?.data?.public_metrics?.followers_count !== undefined) {
+            return {
+              followersCount: data.data.public_metrics.followers_count,
+              isVerified: data.data.verified || false
+            };
+          }
+        } catch (e) {
+          console.error('Proxy attempt failed:', e);
         }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Twitter API error: ${response.statusText}`);
       }
       
-      const data = await response.json();
-      return {
-        followersCount: data.data?.public_metrics?.followers_count ?? 0,
-        isVerified: data.data?.verified ?? false
-      };
+      // Final fallback to metadata if all proxies fail
+      if (metadataFollowers !== undefined) {
+        return {
+          followersCount: metadataFollowers,
+          isVerified: getVerifiedFromMetadata()
+        };
+      }
+      return null;
     } catch (error) {
-      console.error('Error fetching Twitter followers:', error);
+      console.error('Final error in getTwitterFollowers:', error);
+      if (metadataFollowers !== undefined) {
+        return {
+          followersCount: metadataFollowers,
+          isVerified: getVerifiedFromMetadata()
+        };
+      }
       return null;
     }
   }
