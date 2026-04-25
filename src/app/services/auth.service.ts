@@ -136,11 +136,17 @@ export class AuthService {
   }
 
   async getTwitterFollowers(): Promise<{ followersCount: number, isVerified: boolean } | null> {
-    const { data: { session } } = await this.supabaseService.client.auth.getSession();
+    // Get fresh session to ensure we have the latest metadata
+    const { data: { session }, error: sessionError } = await this.supabaseService.client.auth.getSession();
+    if (sessionError || !session) {
+      console.warn('No active session found during follower verification.');
+      return null;
+    }
+
     const providerToken = session?.provider_token;
     const userMetadata = session?.user?.user_metadata;
 
-    console.log('Session metadata:', userMetadata);
+    console.log('Session metadata found:', !!userMetadata);
     
     // Check various possible metadata paths for follower count
     const getFollowersFromMetadata = () => {
@@ -149,56 +155,67 @@ export class AuthService {
         userMetadata?.['followers_count'],
         userMetadata?.['public_metrics']?.['followers_count'],
         userMetadata?.['data']?.['public_metrics']?.['followers_count'],
-        userMetadata?.['user_metadata']?.['followers_count']
+        userMetadata?.['user_metadata']?.['followers_count'],
+        // Sometimes it's nested under the provider name
+        userMetadata?.['twitter']?.['followers_count'],
+        userMetadata?.['x']?.['followers_count']
       ];
-      return paths.find(p => p !== undefined);
+      
+      for (const val of paths) {
+        if (val !== undefined && val !== null) {
+          const num = Number(val);
+          if (!isNaN(num)) return num;
+        }
+      }
+      return undefined;
     };
 
     const getVerifiedFromMetadata = () => {
       const paths = [
         userMetadata?.['verified'],
         userMetadata?.['data']?.['verified'],
-        userMetadata?.['user_metadata']?.['verified']
+        userMetadata?.['user_metadata']?.['verified'],
+        userMetadata?.['twitter']?.['verified'],
+        userMetadata?.['x']?.['verified']
       ];
-      return paths.find(p => p !== undefined) || false;
+      return paths.find(p => p === true) || false;
     };
 
     const metadataFollowers = getFollowersFromMetadata();
+    const isVerifiedMetadata = getVerifiedFromMetadata();
     
-    // If we already have the data in metadata, use it immediately! 
-    // This avoids CORS/Proxy issues entirely.
-    if (metadataFollowers !== undefined && metadataFollowers >= 1000) {
-      console.log('Using follower count from metadata:', metadataFollowers);
+    // LOGGING FOR DEBUGGING ON VERCEL
+    console.log('Follower count from metadata:', metadataFollowers);
+    
+    // If we have the data in metadata, use it! 
+    // This is the most reliable way on Vercel because it avoids CORS/Proxy blocks.
+    if (metadataFollowers !== undefined) {
       return {
         followersCount: metadataFollowers,
-        isVerified: getVerifiedFromMetadata()
+        isVerified: isVerifiedMetadata
       };
     }
 
+    // If metadata doesn't have it, we MUST have a provider token to use the API
     if (!providerToken) {
-      console.warn('No Twitter provider token found in session.');
-      if (metadataFollowers !== undefined) {
-        return {
-          followersCount: metadataFollowers,
-          isVerified: getVerifiedFromMetadata()
-        };
-      }
+      console.warn('No Twitter provider token found and no metadata available.');
       return null;
     }
 
     try {
       const targetUrl = 'https://api.twitter.com/2/users/me?user.fields=public_metrics,verified';
       
-      // Try fetching with a different proxy if the first one fails
+      // Try multiple proxies
       const proxies = [
         (url: string) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-        (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`
+        (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+        (url: string) => `https://proxy.cors.sh/${url}` // Another fallback
       ];
 
       for (const getProxyUrl of proxies) {
         try {
           const proxyUrl = getProxyUrl(targetUrl);
-          console.log(`Attempting fetch via proxy: ${proxyUrl}`);
+          console.log(`Attempting API fetch via: ${proxyUrl}`);
           
           const response = await fetch(proxyUrl, {
             headers: {
@@ -212,7 +229,7 @@ export class AuthService {
           const text = await response.text();
           try {
             const json = JSON.parse(text);
-            // AllOrigins wraps the response in a "contents" field
+            // Handle proxy wrappers (like AllOrigins)
             data = json.contents ? JSON.parse(json.contents) : json;
           } catch (e) {
             continue;
@@ -229,22 +246,9 @@ export class AuthService {
         }
       }
       
-      // Final fallback to metadata if all proxies fail
-      if (metadataFollowers !== undefined) {
-        return {
-          followersCount: metadataFollowers,
-          isVerified: getVerifiedFromMetadata()
-        };
-      }
       return null;
     } catch (error) {
       console.error('Final error in getTwitterFollowers:', error);
-      if (metadataFollowers !== undefined) {
-        return {
-          followersCount: metadataFollowers,
-          isVerified: getVerifiedFromMetadata()
-        };
-      }
       return null;
     }
   }

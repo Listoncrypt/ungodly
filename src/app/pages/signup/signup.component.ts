@@ -35,13 +35,25 @@ export class SignupComponent implements OnInit {
   ngOnInit() {
     this.authService.currentUser$.subscribe((user) => {
       if (user && !this.twitterConnected) {
+        console.log('User detected in subscription, verifying followers...');
         this.verifyTwitterFollowers(user);
       }
     });
 
-    const currentUser = this.authService.getCurrentUser();
-    if (currentUser && !this.twitterConnected) {
-      this.verifyTwitterFollowers(currentUser);
+    // Check for success flag from redirect
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('twitter_success') === 'true') {
+      console.log('Twitter success flag detected in URL');
+      const currentUser = this.authService.getCurrentUser();
+      if (currentUser) {
+        this.verifyTwitterFollowers(currentUser);
+      } else {
+        // If currentUser is not yet available, wait a bit
+        setTimeout(() => {
+          const user = this.authService.getCurrentUser();
+          if (user) this.verifyTwitterFollowers(user);
+        }, 1000);
+      }
     }
   }
 
