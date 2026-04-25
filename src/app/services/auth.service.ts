@@ -96,13 +96,10 @@ export class AuthService {
 
   async initiateTwitterAuth(): Promise<void> {
     const { error } = await this.supabaseService.client.auth.signInWithOAuth({
-      provider: 'twitter',
+      provider: 'x',
       options: {
         redirectTo: `${window.location.origin}/auth/twitter/callback`,
-        scopes: 'users.read tweet.read',
-        queryParams: {
-          prompt: 'consent'
-        }
+        scopes: 'users.read tweet.read'
       }
     });
     if (error) console.error('Error with Twitter Auth', error);
