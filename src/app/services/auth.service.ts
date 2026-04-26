@@ -98,7 +98,7 @@ export class AuthService {
   async initiateTwitterAuth(): Promise<void> {
     // Redirect to backend Twitter OAuth endpoint
     const callbackURL = `${window.location.origin}/auth/twitter/callback`;
-    window.location.href = `http://localhost:3001/api/auth/twitter?callbackURL=${encodeURIComponent(callbackURL)}`;
+    window.location.href = `${environment.backendUrl}/api/auth/twitter?callbackURL=${encodeURIComponent(callbackURL)}`;
   }
 
   exchangeCodeForToken(code: string): Observable<User> {
