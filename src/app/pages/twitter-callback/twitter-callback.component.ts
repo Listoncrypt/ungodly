@@ -32,32 +32,32 @@ export class TwitterCallbackComponent implements OnInit {
     this.processTwitterCallback();
   }
 
-  private processTwitterCallback(): void {
+  private processTwitterCallback(retryCount = 0): void {
     const params = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const error = params.get('error') || hashParams.get('error');
-    const errorDescription = params.get('error_description') || hashParams.get('error_description');
-
+    
     if (error) {
-      console.error('Twitter OAuth error:', error, errorDescription);
+      console.error('Twitter OAuth error:', error);
       this.router.navigate(['/signup'], { queryParams: { error: 'twitter_auth_failed' } });
       return;
     }
 
-    // Supabase handles the token extraction from the URL fragment automatically.
-    // We wait briefly to ensure the client has finished parsing the URL and storing the session.
-    setTimeout(() => {
-      this.authService.exchangeCodeForToken('').subscribe({
-        next: () => {
-          window.history.replaceState({}, document.title, window.location.pathname);
-          this.router.navigate(['/signup'], { queryParams: { twitter_success: 'true' } });
-        },
-        error: (err) => {
-          console.error('Twitter authentication failed:', err);
-          window.history.replaceState({}, document.title, window.location.pathname);
-          this.router.navigate(['/signup'], { queryParams: { error: 'auth_failed' } });
-        },
-      });
-    }, 500);
+    // Supabase stores the session in localStorage after redirect.
+    // We wait for it to be ready.
+    setTimeout(async () => {
+      const { data: { session } } = await this.authService.supabaseService.client.auth.getSession();
+      
+      if (session) {
+        console.log('Twitter session found, redirecting to signup...');
+        this.router.navigate(['/signup'], { queryParams: { twitter_success: 'true' } });
+      } else if (retryCount < 5) {
+        console.log(`Session not found yet, retrying... (${retryCount + 1}/5)`);
+        this.processTwitterCallback(retryCount + 1);
+      } else {
+        console.error('Twitter authentication timed out - no session found');
+        this.router.navigate(['/signup'], { queryParams: { error: 'auth_timeout' } });
+      }
+    }, retryCount === 0 ? 1000 : 1500); // Wait 1s first, then 1.5s between retries
   }
 }

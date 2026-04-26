@@ -137,119 +137,33 @@ export class AuthService {
 
   async getTwitterFollowers(): Promise<{ followersCount: number, isVerified: boolean } | null> {
     const { data: { session }, error: sessionError } = await this.supabaseService.client.auth.getSession();
-    if (sessionError || !session) {
-      console.warn('DEBUG: No active session found.');
-      return null;
-    }
+    if (sessionError || !session) return null;
 
-    // DEBUG: Log everything for inspection
-    console.log('DEBUG: Full session object:', JSON.stringify(session));
-
-    // RECURSIVE DEEP SEARCH FUNCTION
-    const findValueDeep = (obj: any, targetKeys: string[]): any => {
-      if (!obj || typeof obj !== 'object') return undefined;
-      
-      for (const key of targetKeys) {
-        if (obj[key] !== undefined) return obj[key];
-      }
-
-      for (const key in obj) {
-        if (typeof obj[key] === 'object' && obj[key] !== null) {
-          const result = findValueDeep(obj[key], targetKeys);
-          if (result !== undefined) return result;
-        }
-      }
-      return undefined;
-    };
-
-    // 1. GET SCREEN NAME (Username)
-    let screenName = findValueDeep(session, ['preferred_username', 'user_name', 'screen_name', 'username', 'name']);
-    
-    // Fallback: Check identities array specifically
-    if (!screenName && session.user?.identities) {
-      for (const identity of session.user.identities) {
-        if (identity.provider === 'twitter' || identity.provider === 'x') {
-          screenName = identity.identity_data?.['preferred_username'] || 
-                       identity.identity_data?.['user_name'] || 
-                       identity.identity_data?.['screen_name'];
-          if (screenName) break;
-        }
-      }
-    }
-    console.log('DEBUG: Found screen name:', screenName);
-
-    // 2. TRY DEEP SEARCH FOR FOLLOWERS
-    const followersKeys = ['followers_count', 'followers', 'follower_count', 'public_metrics'];
-    let followers = findValueDeep(session, followersKeys);
-    
-    // If it found 'public_metrics' object, drill down
-    if (followers && typeof followers === 'object' && followers.followers_count !== undefined) {
-      followers = followers.followers_count;
-    }
-
-    // Check user_metadata specifically using bracket notation for TS compliance
+    const providerToken = session.provider_token;
+    const accessToken = session.access_token;
     const userMetadata = session.user?.user_metadata as any;
-    if (followers === undefined && userMetadata?.['public_metrics']?.['followers_count'] !== undefined) {
-      followers = userMetadata['public_metrics']['followers_count'];
-    }
-
-    const verified = findValueDeep(session, ['verified']) === true || findValueDeep(session, ['verified']) === 'true';
-
-    if (followers !== undefined && followers !== null) {
-      console.log('DEBUG: Found followers via session deep search:', followers);
-      return { followersCount: Number(followers), isVerified: verified };
-    }
-
-    // 3. TRY FRESH USER FETCH + DEEP SEARCH
-    const { data: { user: freshUser } } = await this.supabaseService.client.auth.getUser();
-    let freshFollowers = findValueDeep(freshUser, followersKeys);
-    if (freshFollowers && typeof freshFollowers === 'object' && freshFollowers.followers_count !== undefined) {
-      freshFollowers = freshFollowers.followers_count;
-    }
-
-    if (freshFollowers !== undefined && freshFollowers !== null) {
-      console.log('DEBUG: Found followers via fresh user deep search:', freshFollowers);
-      return { followersCount: Number(freshFollowers), isVerified: verified };
-    }
-
-    // 4. THE "100% WORK" ALTERNATIVE: Public Syndication API (No Auth Required)
-    if (screenName) {
-      return this.verifyFollowersByHandle(screenName);
-    }
-
-    // 5. API FALLBACK WITH TOKEN... (rest of method remains same)
-    const providerToken = session?.provider_token;
+    
+    // 1. Try Secure API with Token
     if (providerToken) {
-      console.log('DEBUG: Attempting direct API fallback...');
-      const targetUrl = 'https://api.twitter.com/2/users/me?user.fields=public_metrics,verified';
       try {
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-        const response = await fetch(proxyUrl, {
-          headers: { 'Authorization': `Bearer ${providerToken}` }
+        const response = await fetch(`/api/twitter-followers?provider_token=${encodeURIComponent(providerToken)}`, {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
         });
         if (response.ok) {
-          const json = await response.json();
-          if (json.contents) {
-            const data = JSON.parse(json.contents);
-            const apiFollowers = data?.data?.public_metrics?.followers_count;
-            if (apiFollowers !== undefined) {
-              return { followersCount: Number(apiFollowers), isVerified: data?.data?.verified || false };
-            }
-          }
+          const data = await response.json();
+          return { followersCount: data.followersCount, isVerified: data.isVerified };
         }
       } catch (e) {
-        console.error('DEBUG: API Token fallback failed', e);
+        console.warn('API verification failed, trying fallback...', e);
       }
     }
 
-    // 6. LAST RESORT: Check for ANY number > 100 in metadata
-    const metadata = freshUser?.user_metadata || session.user?.user_metadata || {};
-    for (const key in metadata) {
-      const val = metadata[key];
-      const num = Number(val);
-      if (!isNaN(num) && num > 100 && (key.toLowerCase().includes('count') || key.toLowerCase().includes('followers'))) {
-        return { followersCount: num, isVerified: false };
-      }
+    // 2. Fallback: Use "Other Services" Logic (Syndication API)
+    // First, try to find the handle in metadata
+    const handle = userMetadata?.['preferred_username'] || userMetadata?.['user_name'] || userMetadata?.['screen_name'];
+    if (handle) {
+      console.log('Attempting public syndication fallback for handle:', handle);
+      return await this.verifyFollowersByHandle(handle);
     }
 
     return null;
@@ -260,41 +174,35 @@ export class AuthService {
    * Works without OAuth permissions if we have a handle.
    */
   async verifyFollowersByHandle(handle: string): Promise<{ followersCount: number, isVerified: boolean } | null> {
-    console.log('DEBUG: Attempting Public Syndication verification for handle:', handle);
-    
-    // Clean handle (remove @ if present)
     const cleanHandle = handle.startsWith('@') ? handle.substring(1) : handle;
     const syndicationUrl = `https://cdn.syndication.twimg.com/widgets/followbutton/info.json?screen_name=${cleanHandle}`;
     
-    // Try multiple proxies to ensure success
+    // Try multiple proxies
     const proxies = [
       `https://api.allorigins.win/get?url=${encodeURIComponent(syndicationUrl)}`,
-      `https://corsproxy.io/?${encodeURIComponent(syndicationUrl)}`
+      `https://corsproxy.io/?${encodeURIComponent(syndicationUrl)}`,
+      `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(syndicationUrl)}`
     ];
 
     for (const proxyUrl of proxies) {
       try {
-        console.log('DEBUG: Trying proxy:', proxyUrl);
         const response = await fetch(proxyUrl);
         if (response.ok) {
           const json = await response.json();
-          // allorigins puts content in .contents, corsproxy.io returns direct json
           const contents = json.contents ? JSON.parse(json.contents) : json;
           const userData = Array.isArray(contents) ? contents[0] : contents;
           
           if (userData && userData.followers_count !== undefined) {
-            console.log('DEBUG: Success via Public Syndication:', userData.followers_count);
             return { 
               followersCount: Number(userData.followers_count), 
-              isVerified: userData.verified || false 
+              isVerified: !!userData.verified 
             };
           }
         }
       } catch (e) {
-        console.warn(`DEBUG: Proxy failed: ${proxyUrl}`, e);
+        console.warn(`Proxy failed: ${proxyUrl}`);
       }
     }
-
     return null;
   }
 }

@@ -34,28 +34,31 @@ export class SignupComponent implements OnInit {
     });
   }
 
+  private userSubscribed = false;
+
   ngOnInit() {
     this.authService.currentUser$.subscribe((user) => {
-      if (user && !this.twitterConnected) {
+      // Guard against infinite loops after logout/disconnect
+      if (!user) {
+        this.userSubscribed = false;
+        this.twitterConnected = false;
+        this.twitterUser = null;
+        return;
+      }
+
+      if (!this.userSubscribed) {
         console.log('User detected in subscription, verifying followers...');
+        this.userSubscribed = true;
         this.verifyTwitterFollowers(user);
       }
     });
 
-    // Check for success flag from redirect
+    // Handle the twitter_success flag specifically once
     const params = new URLSearchParams(window.location.search);
     if (params.get('twitter_success') === 'true') {
       console.log('Twitter success flag detected in URL');
-      const currentUser = this.authService.getCurrentUser();
-      if (currentUser) {
-        this.verifyTwitterFollowers(currentUser);
-      } else {
-        // If currentUser is not yet available, wait a bit
-        setTimeout(() => {
-          const user = this.authService.getCurrentUser();
-          if (user) this.verifyTwitterFollowers(user);
-        }, 1000);
-      }
+      // Clear the query param so it doesn't trigger again on refresh
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }
 

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { filter, take, map } from 'rxjs/operators';
 import {
   CanActivate,
   ActivatedRouteSnapshot,
@@ -21,8 +21,9 @@ export class AuthGuard implements CanActivate {
     state: RouterStateSnapshot
   ): Observable<boolean> {
     return this.authService.currentUser$.pipe(
-      // Wait until we have a user or we are sure there is no session
-      // For now, we take the first value emitted by combineLatest in AuthService
+      // Wait until the session is initialized (currentUser is not undefined)
+      filter((user) => user !== undefined),
+      take(1),
       map((user: User | null) => {
         if (!user) {
           this.router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
