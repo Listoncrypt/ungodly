@@ -24,7 +24,7 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private supabaseService: SupabaseService, private router: Router) {
+  constructor(public supabaseService: SupabaseService, private router: Router) {
     // Merge currentUser and currentProfile to create the app's User object
     combineLatest([
       this.supabaseService.currentUser$,
