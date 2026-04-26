@@ -139,30 +139,10 @@ export class AuthService {
     const { data: { session }, error: sessionError } = await this.supabaseService.client.auth.getSession();
     if (sessionError || !session) return null;
 
-    const providerToken = session.provider_token;
-    const accessToken = session.access_token;
     const userMetadata = session.user?.user_metadata as any;
+    const handle = userMetadata?.['preferred_username'] || userMetadata?.['user_name'] || userMetadata?.['screen_name'] || userMetadata?.['username'];
     
-    // 1. Try Secure API with Token
-    if (providerToken) {
-      try {
-        const response = await fetch(`/api/twitter-followers?provider_token=${encodeURIComponent(providerToken)}`, {
-          headers: { 'Authorization': `Bearer ${accessToken}` }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          return { followersCount: data.followersCount, isVerified: data.isVerified };
-        }
-      } catch (e) {
-        console.warn('API verification failed, trying fallback...', e);
-      }
-    }
-
-    // 2. Fallback: Use "Other Services" Logic (Syndication API)
-    // First, try to find the handle in metadata
-    const handle = userMetadata?.['preferred_username'] || userMetadata?.['user_name'] || userMetadata?.['screen_name'];
     if (handle) {
-      console.log('Attempting public syndication fallback for handle:', handle);
       return await this.verifyFollowersByHandle(handle);
     }
 

@@ -71,8 +71,8 @@ export class SignupComponent implements OnInit {
     if (twitterData === null) {
       console.error('DEBUG: Twitter verification returned null. Showing manual fallback.');
       this.error = 'We connected your X account but couldn\'t automatically find your follower count.';
-      this.twitterConnected = true; // Show the manual input box now
-      this.isVerified = false;
+      this.twitterConnected = true; 
+      this.isVerified = true; // Allow them to see the form
       this.loading = false;
       return;
     }
@@ -80,13 +80,11 @@ export class SignupComponent implements OnInit {
     const { followersCount, isVerified } = twitterData;
 
     if (followersCount < 1000) {
-      this.error = `X/Twitter account must have at least 1,000 followers to register. You currently have ${followersCount}.`;
-      this.loading = false;
-      this.disconnectTwitter();
-      return;
+      this.error = `Note: You have ${followersCount} followers. You can sign up, but your account will only be visible to admins for approval once you reach 1,000 followers.`;
+    } else {
+      this.error = '';
     }
 
-    this.error = '';
     this.twitterConnected = true;
     this.isVerified = true;
     this.twitterUser = { ...user, followersCount, isVerified };
@@ -106,17 +104,18 @@ export class SignupComponent implements OnInit {
       const result = await this.authService.verifyFollowersByHandle(this.manualHandle);
       if (result) {
         if (result.followersCount >= 1000) {
-          this.isVerified = true;
-          this.twitterUser = { 
-            ...(this.twitterUser || {}), 
-            followersCount: result.followersCount,
-            twitterHandle: this.manualHandle,
-            isVerified: result.isVerified 
-          };
           this.error = '';
         } else {
-          this.error = `Handle @${this.manualHandle} only has ${result.followersCount} followers. 1,000 required.`;
+          this.error = `Note: @${this.manualHandle} has ${result.followersCount} followers. You can sign up, but admins only approve accounts with 1,000+ followers.`;
         }
+        
+        this.isVerified = true;
+        this.twitterUser = { 
+          ...(this.twitterUser || {}), 
+          followersCount: result.followersCount,
+          twitterHandle: this.manualHandle,
+          isVerified: result.isVerified 
+        };
       } else {
         this.error = 'Could not find followers for this handle. Please check the spelling and ensure your profile is public.';
       }
@@ -150,6 +149,16 @@ export class SignupComponent implements OnInit {
       this.loading = false;
       this.error = 'Failed to disconnect Twitter account.';
     }
+  }
+
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  skipVerification() {
+    this.isVerified = true;
+    this.error = 'Note: You can proceed, but admins will only approve your account if they can verify you have 1,000+ followers.';
   }
 
   onSubmit() {
