@@ -5,168 +5,46 @@
     <div class="text-center">
       <h2 class="text-3xl font-extrabold text-gray-900">Create your account</h2>
       <p class="mt-2 text-sm text-gray-600">
-        Connect Twitter and sign-up to get accepted as an agent and start
-        earning.
+        Verify your Twitter account (1k+ followers required) and sign-up to start earning.
       </p>
-      <div class="mt-4 inline-flex items-center px-4 py-2 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
-        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .33z"/>
-        </svg>
-        <a href="https://t.me/+3rl2v5b7H-9mNDFk" target="_blank" class="text-sm font-medium hover:underline">
-          Join agent channel for task reminders
-        </a>
-      </div>
-    </div>
-
-    <div
-      class="rounded-lg border-2"
-      [class.border-green-300]="twitterConnected"
-      [class.border-gray-300]="!twitterConnected"
-    >
-      <div
-        class="p-4"
-        [class.bg-green-50]="twitterConnected"
-        [class.bg-gray-50]="!twitterConnected"
-      >
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-3">
-            <svg
-              class="h-6 w-6"
-              [class.text-green-600]="twitterConnected"
-              [class.text-gray-400]="!twitterConnected"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                d="M8.29 20c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 01.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 18.407a11.616 11.616 0 006.29 1.84"
-              />
-            </svg>
-            <div>
-              <p
-                class="text-sm font-semibold"
-                [class.text-green-900]="twitterConnected"
-                [class.text-gray-900]="!twitterConnected"
-              >
-                {{
-                  twitterConnected ? "Twitter Connected ✓" : "Connect Twitter"
-                }}
-              </p>
-              <p
-                class="text-xs"
-                [class.text-green-700]="twitterConnected"
-                [class.text-gray-600]="!twitterConnected"
-              >
-                {{
-                  twitterConnected
-                    ? twitterUser?.twitterHandle || "@account"
-                    : "Required for verification"
-                }}
-              </p>
-            </div>
-          </div>
-          <!-- Disconnect Button -->
-          <button
-            *ngIf="twitterConnected"
-            (click)="disconnectTwitter()"
-            class="text-sm text-red-600 hover:text-red-800 font-medium px-3 py-1 rounded border border-red-200 hover:bg-red-50 transition"
-          >
-            Disconnect
-          </button>
-        </div>
-
-        <button
-          type="button"
-          *ngIf="!twitterConnected"
-          (click)="connectTwitter()"
-          [disabled]="loading"
-          class="mt-4 w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          <svg
-            *ngIf="!loading"
-            class="h-5 w-5 mr-2"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              d="M8.29 20c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 01.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 18.407a11.616 11.616 0 006.29 1.84"
-            />
-          </svg>
-          <svg
-            *ngIf="loading"
-            class="animate-spin h-5 w-5 mr-2 text-gray-700"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            ></circle>
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
-          {{ loading ? "Connecting..." : "Connect with Twitter" }}
-        </button>
-      </div>
     </div>
 
     <div
       *ngIf="error"
-      class="rounded-md bg-red-50 p-4 border border-red-200 mt-6"
+      class="rounded-md"
+      [class.bg-red-50]="!twitterVerified"
+      [class.bg-green-50]="twitterVerified"
+      [class.border-red-200]="!twitterVerified"
+      [class.border-green-200]="twitterVerified"
+      [class.p-4]="true"
+      [class.mt-6]="true"
     >
-      <p class="text-sm font-medium text-red-800">{{ error }}</p>
+      <p
+        class="text-sm font-medium"
+        [class.text-red-800]="!twitterVerified"
+        [class.text-green-800]="twitterVerified"
+      >{{ error }}</p>
     </div>
 
-    <!-- Manual Verification Fallback -->
-    <div *ngIf="twitterConnected && !isVerified" class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-4">
-      <div class="flex">
-        <div class="flex-shrink-0">
-          <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <div class="ml-3">
-          <p class="text-sm text-yellow-700">
-            We couldn't automatically verify your followers. Please enter your Twitter handle manually:
+    <!-- Verification Status -->
+    <div
+      *ngIf="twitterVerified"
+      class="rounded-lg border-2 border-green-300 bg-green-50 p-4"
+    >
+      <div class="flex items-center space-x-3">
+        <svg class="h-6 w-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+        <div>
+          <p class="text-sm font-semibold text-green-900">
+            &#64;<span [innerText]="twitterHandle"></span> verified with <span [innerText]="followersCount"></span> followers
           </p>
-          <div class="mt-2 flex">
-            <input
-              type="text"
-              [(ngModel)]="manualHandle"
-              placeholder="@username"
-              class="block w-full px-3 py-1.5 text-sm border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-            <button
-              (click)="verifyManualHandle()"
-              [disabled]="loading"
-              class="ml-2 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              Verify
-            </button>
-            <button
-              (click)="skipVerification()"
-              [disabled]="loading"
-              class="ml-2 inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              Skip
-            </button>
-          </div>
-          <p class="mt-2 text-[10px] text-yellow-600">
-            *You can skip this if your handle is not found, but admins won't see your account for approval until it reaches 1k followers.
-          </p>
+          <p class="text-xs text-green-700">You meet the 1,000 followers requirement</p>
         </div>
       </div>
     </div>
 
     <form
-      *ngIf="twitterConnected && isVerified"
       [formGroup]="signupForm"
       (ngSubmit)="onSubmit()"
       class="mt-8 space-y-6"
@@ -174,10 +52,49 @@
       <div class="space-y-4">
         <div>
           <label
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >Twitter Account *</label>
+          
+          <div *ngIf="!twitterVerified">
+            <button
+              type="button"
+              (click)="connectWithTwitter()"
+              [disabled]="loading"
+              class="w-full inline-flex justify-center items-center py-3 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M8.29 20c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 01.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 18.407a11.616 11.616 0 006.29 1.84"/>
+              </svg>
+              <span *ngIf="loading">Connecting to Twitter...</span>
+              <span *ngIf="!loading">Connect with Twitter</span>
+            </button>
+            <p class="mt-2 text-xs text-gray-500">
+              Login with Twitter to verify your account (1k+ followers required)
+            </p>
+          </div>
+          
+          <div *ngIf="twitterVerified" class="bg-green-50 border border-green-200 rounded-md p-3">
+            <div class="flex items-center space-x-2">
+              <svg class="h-5 w-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              <div>
+                <p class="text-sm font-medium text-green-900">
+                  &#64;<span [innerText]="twitterHandle"></span> connected
+                </p>
+                <p class="text-xs text-green-700">
+                  {{ followersCount }} followers • Meets 1k requirement
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label
             for="email"
             class="block text-sm font-medium text-gray-700 mb-1"
-            >Email Address *</label
-          >
+          >Email Address *</label>
           <input
             id="email"
             name="email"
@@ -252,10 +169,11 @@
       <div>
         <button
           type="submit"
-          [disabled]="!signupForm.valid || loading"
+          [disabled]="!signupForm.valid || !twitterVerified || loading"
           class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {{ loading ? "Creating account..." : "Create Account" }}
+          <span *ngIf="loading">Creating account...</span>
+          <span *ngIf="!loading">Create Account</span>
         </button>
       </div>
 
@@ -270,16 +188,5 @@
         </p>
       </div>
     </form>
-
-    <div *ngIf="!twitterConnected" class="text-center">
-      <p class="text-sm text-gray-600">
-        Already have an account?
-        <a
-          routerLink="/login"
-          class="font-medium text-blue-600 hover:text-blue-500"
-          >Sign in here</a
-        >
-      </p>
-    </div>
   </div>
 </div>

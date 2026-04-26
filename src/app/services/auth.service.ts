@@ -3,6 +3,7 @@ import { BehaviorSubject, Observable, from, of, combineLatest } from 'rxjs';
 import { map, switchMap, catchError, filter } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { SupabaseService } from './supabase.service';
+import { environment } from '../../environments/environment';
 
 export interface User {
   id: string;
@@ -95,14 +96,9 @@ export class AuthService {
   }
 
   async initiateTwitterAuth(): Promise<void> {
-    const { error } = await this.supabaseService.client.auth.signInWithOAuth({
-      provider: 'x',
-      options: {
-        redirectTo: `${window.location.origin}/auth/twitter/callback`,
-        scopes: 'users.read tweet.read'
-      }
-    });
-    if (error) console.error('Error with Twitter Auth', error);
+    // Redirect to backend Twitter OAuth endpoint
+    const callbackURL = `${window.location.origin}/auth/twitter/callback`;
+    window.location.href = `http://localhost:3001/api/auth/twitter?callbackURL=${encodeURIComponent(callbackURL)}`;
   }
 
   exchangeCodeForToken(code: string): Observable<User> {
@@ -136,11 +132,9 @@ export class AuthService {
   }
 
   async getTwitterFollowers(): Promise<{ followersCount: number, isVerified: boolean } | null> {
-    const { data: { session }, error: sessionError } = await this.supabaseService.client.auth.getSession();
-    if (sessionError || !session) return null;
-
-    const userMetadata = session.user?.user_metadata as any;
-    const handle = userMetadata?.['preferred_username'] || userMetadata?.['user_name'] || userMetadata?.['screen_name'] || userMetadata?.['username'];
+    // Since backend is Supabase, try to get Twitter handle from user metadata
+    const user = this.getCurrentUser();
+    const handle = user?.twitterHandle;
     
     if (handle) {
       return await this.verifyFollowersByHandle(handle);
@@ -155,34 +149,29 @@ export class AuthService {
    */
   async verifyFollowersByHandle(handle: string): Promise<{ followersCount: number, isVerified: boolean } | null> {
     const cleanHandle = handle.startsWith('@') ? handle.substring(1) : handle;
-    const syndicationUrl = `https://cdn.syndication.twimg.com/widgets/followbutton/info.json?screen_name=${cleanHandle}`;
     
-    // Try multiple proxies
-    const proxies = [
-      `https://api.allorigins.win/get?url=${encodeURIComponent(syndicationUrl)}`,
-      `https://corsproxy.io/?${encodeURIComponent(syndicationUrl)}`,
-      `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(syndicationUrl)}`
-    ];
-
-    for (const proxyUrl of proxies) {
-      try {
-        const response = await fetch(proxyUrl);
-        if (response.ok) {
-          const json = await response.json();
-          const contents = json.contents ? JSON.parse(json.contents) : json;
-          const userData = Array.isArray(contents) ? contents[0] : contents;
-          
-          if (userData && userData.followers_count !== undefined) {
-            return { 
-              followersCount: Number(userData.followers_count), 
-              isVerified: !!userData.verified 
-            };
-          }
-        }
-      } catch (e) {
-        console.warn(`Proxy failed: ${proxyUrl}`);
+    try {
+      // Call Supabase Edge Function for server-side verification
+      const { data, error } = await this.supabaseService.client.functions.invoke('verify-twitter', {
+        body: { handle: cleanHandle }
+      });
+      
+      if (error) {
+        console.error('Edge function error:', error);
+        return null;
       }
+      
+      if (data && data.followersCount !== undefined) {
+        return {
+          followersCount: data.followersCount,
+          isVerified: data.isVerified || false
+        };
+      }
+      
+      return null;
+    } catch (e) {
+      console.error('Verification failed:', e);
+      return null;
     }
-    return null;
   }
 }

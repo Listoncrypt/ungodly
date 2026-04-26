@@ -32,32 +32,40 @@ export class TwitterCallbackComponent implements OnInit {
     this.processTwitterCallback();
   }
 
-  private processTwitterCallback(retryCount = 0): void {
+  private async processTwitterCallback(retryCount = 0): Promise<void> {
     const params = new URLSearchParams(window.location.search);
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const error = params.get('error') || hashParams.get('error');
-    
+    const success = params.get('success');
+    const error = params.get('error');
+    const twitterHandle = params.get('twitter_handle');
+    const followersCount = params.get('followers_count');
+    const isVerified = params.get('is_verified');
+
     if (error) {
       console.error('Twitter OAuth error:', error);
-      this.router.navigate(['/signup'], { queryParams: { error: 'twitter_auth_failed' } });
+      this.router.navigate(['/signup'], { queryParams: { error: 'twitter_auth_failed', details: error } });
       return;
     }
 
-    // Supabase stores the session in localStorage after redirect.
-    // We wait for it to be ready.
-    setTimeout(async () => {
-      const { data: { session } } = await this.authService.supabaseService.client.auth.getSession();
+    if (success === 'true' && twitterHandle && followersCount) {
+      // Store Twitter data in session storage for the signup page
+      sessionStorage.setItem('twitter_auth_data', JSON.stringify({
+        twitterHandle,
+        followersCount: parseInt(followersCount),
+        isVerified: isVerified === 'true'
+      }));
       
-      if (session) {
-        console.log('Twitter session found, redirecting to signup...');
-        this.router.navigate(['/signup'], { queryParams: { twitter_success: 'true' } });
-      } else if (retryCount < 5) {
-        console.log(`Session not found yet, retrying... (${retryCount + 1}/5)`);
-        this.processTwitterCallback(retryCount + 1);
-      } else {
-        console.error('Twitter authentication timed out - no session found');
-        this.router.navigate(['/signup'], { queryParams: { error: 'auth_timeout' } });
-      }
-    }, retryCount === 0 ? 1000 : 1500); // Wait 1s first, then 1.5s between retries
+      console.log('Twitter OAuth successful, redirecting to signup...');
+      this.router.navigate(['/signup'], { 
+        queryParams: { 
+          twitter_success: 'true',
+          twitter_handle: twitterHandle,
+          followers_count: followersCount
+        } 
+      });
+      return;
+    }
+
+    // If no success data, redirect to signup with error
+    this.router.navigate(['/signup'], { queryParams: { error: 'auth_timeout' } });
   }
 }
