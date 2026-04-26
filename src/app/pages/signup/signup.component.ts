@@ -151,11 +151,6 @@ export class SignupComponent implements OnInit {
     }
   }
 
-    } finally {
-      this.loading = false;
-    }
-  }
-
   skipVerification() {
     this.isVerified = true;
     this.error = 'Note: You can proceed, but admins will only approve your account if they can verify you have 1,000+ followers.';
