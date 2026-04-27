@@ -3,9 +3,18 @@ const path = require('path');
 const express = require('express');
 const crypto = require('crypto');
 
+// Debug: Check environment variables at the very start
+console.log('=== ENVIRONMENT CHECK ===');
+console.log('TWITTER_CLIENT_ID:', process.env.TWITTER_CLIENT_ID ? 'Set' : 'Not set');
+console.log('TWITTER_CLIENT_SECRET:', process.env.TWITTER_CLIENT_SECRET ? 'Set' : 'Not set');
+console.log('TWITTER_REDIRECT_URI:', process.env.TWITTER_REDIRECT_URI);
+console.log('========================');
+
 // Read .env.server file manually (for local development only)
+// Only read from file if environment variables are not already set (i.e., local development)
 const envPath = path.join(__dirname, '.env.server');
-if (fs.existsSync(envPath)) {
+if (fs.existsSync(envPath) && !process.env.TWITTER_CLIENT_ID) {
+  console.log('Loading environment variables from .env.server file...');
   const envContent = fs.readFileSync(envPath, 'utf8');
   envContent.split('\n').forEach(line => {
     const [key, ...valueParts] = line.split('=');
@@ -13,6 +22,7 @@ if (fs.existsSync(envPath)) {
       process.env[key.trim()] = valueParts.join('=').trim();
     }
   });
+  console.log('Environment variables loaded from .env.server');
 }
 
 const app = express();
@@ -23,14 +33,21 @@ app.use(express.json());
 // Twitter OAuth credentials from environment variables
 const TWITTER_CLIENT_ID = process.env.TWITTER_CLIENT_ID;
 const TWITTER_CLIENT_SECRET = process.env.TWITTER_CLIENT_SECRET;
-const TWITTER_REDIRECT_URI = process.env.TWITTER_REDIRECT_URI || 'http://localhost:3001/api/auth/callback/twitter';
+const TWITTER_REDIRECT_URI = process.env.TWITTER_REDIRECT_URI;
 
+console.log('=== FINAL CONFIGURATION ===');
 console.log('Twitter Client ID:', TWITTER_CLIENT_ID ? 'Set' : 'Not set');
 console.log('Twitter Client Secret:', TWITTER_CLIENT_SECRET ? 'Set' : 'Not set');
 console.log('Twitter Redirect URI:', TWITTER_REDIRECT_URI);
+console.log('===========================');
 
 if (!TWITTER_CLIENT_ID || !TWITTER_CLIENT_SECRET) {
   console.error('ERROR: TWITTER_CLIENT_ID and TWITTER_CLIENT_SECRET must be set');
+  process.exit(1);
+}
+
+if (!TWITTER_REDIRECT_URI) {
+  console.error('ERROR: TWITTER_REDIRECT_URI must be set');
   process.exit(1);
 }
 
