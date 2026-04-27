@@ -11,9 +11,9 @@
           class="inline-flex items-center gap-2 sm:gap-3 flex-shrink-0"
         >
           <img
-            src="assets/ungodly-achv-logo.png"
+            src="assets/e5b0506d-df2e-4736-9427-8480edc912a1.jpg"
             alt="UNGODLY ACHV"
-            class="h-12 w-12 rounded-full object-cover border-2 border-gray-200"
+            class="h-12 w-auto object-contain border-0"
           />
         </a>
 
@@ -55,7 +55,7 @@
         <div class="flex items-center gap-4">
           <button
             (click)="onBecomeAgent()"
-            class="hidden sm:inline-flex px-6 py-2 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+            class="hidden sm:inline-flex px-6 py-2 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-colors cursor-pointer touch-manipulation"
           >
             Become An Agent
           </button>
@@ -128,7 +128,7 @@
         </a> -->
         <button
           (click)="onBecomeAgent(); closeMobileMenu()"
-          class="w-full mt-4 px-6 py-2 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+          class="w-full mt-4 px-6 py-2 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-colors cursor-pointer touch-manipulation"
         >
           Become An Agent
         </button>
@@ -157,8 +157,11 @@
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <button
           (click)="joinTelegram()"
-          class="px-8 py-3 bg-white text-gray-900 font-semibold rounded-lg border-2 border-gray-300 hover:bg-gray-50 transition-colors text-lg btn-animate hero-btn"
+          class="px-8 py-3 bg-white text-gray-900 font-semibold rounded-lg border-2 border-gray-300 hover:bg-gray-50 transition-colors text-lg btn-animate hero-btn flex items-center justify-center gap-2"
         >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
           View Results
         </button>
       </div>
@@ -178,13 +181,9 @@
         <div
           class="p-8 border border-gray-200 rounded-lg hover:shadow-lg transition-shadow card-tilt reveal"
         >
-          <div class="text-4xl mb-4">🌱</div>
-          <h3 class="text-xl font-bold text-gray-900 mb-3">KOL Campaigns</h3>
+          <h3 class="text-xl font-bold text-gray-900 mb-3">Advisory</h3>
           <p class="text-gray-600">
-            Authentic community building on X with real audience engagement.
-            <br />
-            No bots, no fake followers just genuine organic growth powered by
-            real community members.
+            TGE and launch campaigns
           </p>
         </div>
 
@@ -192,12 +191,11 @@
         <div
           class="p-8 border border-gray-200 rounded-lg hover:shadow-lg transition-shadow card-tilt reveal"
         >
-          <div class="text-4xl mb-4">⚙️</div>
-          <h3 class="text-xl font-bold text-gray-900 mb-3">AOE Updates</h3>
+          <h3 class="text-xl font-bold text-gray-900 mb-3">AOE Update</h3>
           <p class="text-gray-600">
             Auto Organic Engagement powered by advanced algorithms. <br />
             Our groundbreaking technology automates authentic engagement across
-            multiple channels for unstoppable growth.
+            multiple channels for growth.
           </p>
         </div>
 
@@ -205,11 +203,10 @@
         <div
           class="p-8 border border-gray-200 rounded-lg hover:shadow-lg transition-shadow"
         >
-          <div class="text-4xl mb-4">�</div>
           <h3 class="text-xl font-bold text-gray-900 mb-3">Reach</h3>
           <p class="text-gray-600">
-            When giving projects visibility, our reach consists of Asian
-            community, North America
+            When giving protocols visibility, we don't just give real users impressions. <br />
+            We let every part of CT see you (APAC, North America, MENA, Europe and the likes).
           </p>
         </div>
       </div>
