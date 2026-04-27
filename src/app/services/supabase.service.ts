@@ -124,9 +124,8 @@ export class SupabaseService {
       .from('profiles')
       .select('*')
       .eq('is_approved', false)
-      .gte('twitter_followers', 1000)
       .order('created_at', { ascending: false });
-    
+
     if (error) throw error;
     return data as Profile[];
   }
