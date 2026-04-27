@@ -45,8 +45,11 @@ export class AuthGuard implements CanActivate {
           return true;
         }
 
-        // Authenticated but not approved
-        this.router.navigate(['/waiting-approval']);
+        // Authenticated but not approved - redirect to signup to register again
+        // This handles the case where a user was removed from profiles
+        this.authService.logout(false).then(() => {
+          this.router.navigate(['/signup'], { queryParams: { message: 'profile_removed' } });
+        });
         return false;
       })
     );
