@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { filter, take, map } from 'rxjs/operators';
+import { Observable, from, of } from 'rxjs';
+import { filter, take, map, switchMap } from 'rxjs/operators';
 import {
   CanActivate,
   ActivatedRouteSnapshot,
@@ -8,6 +8,7 @@ import {
   Router,
 } from '@angular/router';
 import { AuthService, User } from '../services/auth.service';
+import { SupabaseService } from '../services/supabase.service';
 
 @Injectable({
   providedIn: 'root',
@@ -15,6 +16,7 @@ import { AuthService, User } from '../services/auth.service';
 export class AuthGuard implements CanActivate {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private supabaseService = inject(SupabaseService);
 
   canActivate(
     route: ActivatedRouteSnapshot,
@@ -24,7 +26,7 @@ export class AuthGuard implements CanActivate {
       // Wait until the session is initialized (currentUser is not undefined)
       filter((user) => user !== undefined),
       take(1),
-      map((user: User | null) => {
+      map(async (user: User | null) => {
         if (!user) {
           this.router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
           return false;
@@ -45,13 +47,25 @@ export class AuthGuard implements CanActivate {
           return true;
         }
 
-        // Authenticated but not approved - redirect to signup to register again
-        // This handles the case where a user was removed from profiles
-        this.authService.logout(false).then(() => {
-          this.router.navigate(['/signup'], { queryParams: { message: 'profile_removed' } });
-        });
+        // Authenticated but not approved - check if profile exists
+        try {
+          const profile = await this.supabaseService.getProfile(user.id);
+          if (!profile) {
+            // Profile doesn't exist - user was deleted, redirect to signup
+            await this.authService.logout(false);
+            this.router.navigate(['/signup'], { queryParams: { message: 'profile_removed' } });
+            return false;
+          }
+        } catch (error) {
+          console.error('Error checking profile:', error);
+        }
+
+        // Profile exists but not approved - redirect to waiting-approval
+        this.router.navigate(['/waiting-approval']);
         return false;
-      })
+      }),
+      // Convert the Observable<boolean> returned by map to Observable<boolean>
+      switchMap(result => result instanceof Promise ? from(result) : of(result))
     );
   }
 }

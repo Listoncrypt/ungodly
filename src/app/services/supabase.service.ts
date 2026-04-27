@@ -142,12 +142,22 @@ export class SupabaseService {
   }
 
   async declineUser(userId: string) {
+    // First delete the profile
     const { data, error } = await this.supabase
       .from('profiles')
       .delete()
       .eq('id', userId);
-      
+
     if (error) throw error;
+
+    // Then delete the auth account using admin API
+    const { error: deleteError } = await this.supabase.auth.admin.deleteUser(userId);
+
+    if (deleteError) {
+      console.error('Failed to delete auth account:', deleteError);
+      throw deleteError;
+    }
+
     return data;
   }
 
