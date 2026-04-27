@@ -48,22 +48,9 @@ export class AuthGuard implements CanActivate {
         }
 
         // Authenticated but not approved - check if profile exists in database
-        try {
-          const { data: profile } = await this.supabaseService.supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', user.id)
-            .single();
-
-          if (!profile) {
-            // Profile doesn't exist - user was deleted, redirect to signup
-            await this.authService.logout(false);
-            this.router.navigate(['/signup'], { queryParams: { message: 'profile_removed' } });
-            return false;
-          }
-        } catch (error) {
-          console.error('Error checking profile:', error);
-          // If error, assume profile doesn't exist and redirect to signup
+        const profileExists = await this.supabaseService.profileExists(user.id);
+        if (!profileExists) {
+          // Profile doesn't exist - user was deleted, redirect to signup
           await this.authService.logout(false);
           this.router.navigate(['/signup'], { queryParams: { message: 'profile_removed' } });
           return false;

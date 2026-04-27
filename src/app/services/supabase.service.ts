@@ -162,6 +162,20 @@ export class SupabaseService {
     return data;
   }
 
+  async profileExists(userId: string): Promise<boolean> {
+    try {
+      const { data, error } = await this.supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .single();
+
+      return !error && !!data;
+    } catch {
+      return false;
+    }
+  }
+
   async uploadMedia(bucket: 'images' | 'videos', file: File): Promise<string> {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
