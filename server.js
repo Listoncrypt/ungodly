@@ -3,7 +3,7 @@ const path = require('path');
 const express = require('express');
 const crypto = require('crypto');
 
-// Read .env.server file manually
+// Read .env.server file manually (for local development only)
 const envPath = path.join(__dirname, '.env.server');
 if (fs.existsSync(envPath)) {
   const envContent = fs.readFileSync(envPath, 'utf8');
@@ -25,8 +25,12 @@ const TWITTER_CLIENT_ID = process.env.TWITTER_CLIENT_ID;
 const TWITTER_CLIENT_SECRET = process.env.TWITTER_CLIENT_SECRET;
 const TWITTER_REDIRECT_URI = process.env.TWITTER_REDIRECT_URI || 'http://localhost:3001/api/auth/callback/twitter';
 
+console.log('Twitter Client ID:', TWITTER_CLIENT_ID ? 'Set' : 'Not set');
+console.log('Twitter Client Secret:', TWITTER_CLIENT_SECRET ? 'Set' : 'Not set');
+console.log('Twitter Redirect URI:', TWITTER_REDIRECT_URI);
+
 if (!TWITTER_CLIENT_ID || !TWITTER_CLIENT_SECRET) {
-  console.error('ERROR: TWITTER_CLIENT_ID and TWITTER_CLIENT_SECRET must be set in .env.server');
+  console.error('ERROR: TWITTER_CLIENT_ID and TWITTER_CLIENT_SECRET must be set');
   process.exit(1);
 }
 
