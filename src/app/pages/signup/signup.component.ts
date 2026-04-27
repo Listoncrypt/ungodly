@@ -58,7 +58,7 @@ export class SignupComponent implements OnInit {
         this.twitterHandle = data.twitterHandle;
         this.followersCount = data.followersCount;
         this.isTwitterVerified = data.isVerified;
-        
+
         if (this.followersCount >= 1000) {
           this.twitterVerified = true;
           this.error = '';
@@ -66,10 +66,18 @@ export class SignupComponent implements OnInit {
           this.twitterVerified = false;
           this.error = `Your account has ${this.followersCount} followers. You need at least 1,000 followers to sign up.`;
         }
-        
+
+        // Store access token and user ID in localStorage for task verification
+        if (data.accessToken) {
+          localStorage.setItem('twitter_access_token', data.accessToken);
+        }
+        if (data.twitterUserId) {
+          localStorage.setItem('twitter_user_id', data.twitterUserId);
+        }
+
         // Update form with Twitter handle
         this.signupForm.patchValue({ twitterHandle: this.twitterHandle });
-        
+
         // Clear the query params
         window.history.replaceState({}, document.title, window.location.pathname);
       }

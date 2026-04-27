@@ -103,8 +103,25 @@ export class DashboardComponent implements OnInit {
     console.log('Opening X (Twitter)...', task.post_link);
     window.open(task.post_link || 'https://x.com', '_blank');
 
-    // Simulate validation and task completion
+    // Extract tweet ID for verification
+    const tweetId = this.extractTweetId(task.post_link || '');
+
+    if (!tweetId) {
+      alert('Invalid task link. Cannot verify engagement.');
+      return;
+    }
+
+    // Wait for user to engage, then verify
     setTimeout(async () => {
+      console.log('Verifying engagement for tweet:', tweetId);
+
+      const isVerified = await this.verifyEngagement(tweetId);
+
+      if (!isVerified) {
+        alert('Engagement verification failed. Please make sure you liked or retweeted the post to earn rewards.');
+        return;
+      }
+
       this.tasksComplete++;
 
       let finalReward = task.reward;
@@ -131,7 +148,7 @@ export class DashboardComponent implements OnInit {
       this.engagementTasks = this.engagementTasks.filter(t => t.id !== task.id);
 
       alert(`Task validated! You earned $${finalReward.toFixed(2)}`);
-    }, 2000);
+    }, 5000); // Increased to 5 seconds to give user time to engage
   }
 
   async submitWithdrawal() {
@@ -177,13 +194,46 @@ export class DashboardComponent implements OnInit {
 
   logout() {
     this.authService.logout();
-    this.router.navigate(['/login']);
+  }
+
+  private extractTweetId(url: string): string | null {
+    const match = url.match(/twitter\.com\/\w+\/status\/(\d+)/) || url.match(/x\.com\/\w+\/status\/(\d+)/);
+    return match ? match[1] : null;
+  }
+
+  private async verifyEngagement(tweetId: string): Promise<boolean> {
+    const accessToken = localStorage.getItem('twitter_access_token');
+    const twitterUserId = localStorage.getItem('twitter_user_id');
+
+    if (!accessToken || !twitterUserId) {
+      console.error('Missing Twitter credentials for verification');
+      return false;
+    }
+
+    try {
+      const response = await fetch('https://ungodly-backend.onrender.com/api/verify-engagement', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          accessToken,
+          tweetId,
+          userId: twitterUserId
+        })
+      });
+
+      const result = await response.json();
+      return result.verified;
+    } catch (error) {
+      console.error('Verification failed:', error);
+      return false;
+    }
   }
 
   setActiveMenu(menu: string) {
     if (menu === 'Admin') {
       this.router.navigate(['/admin-dashboard']);
-      return;
     }
     this.activeMenu = menu;
   }

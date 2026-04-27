@@ -200,7 +200,9 @@ app.get('/api/auth/callback/twitter', async (req, res) => {
     redirectUrl.searchParams.set('followers_count', followersCount);
     redirectUrl.searchParams.set('is_verified', isVerified);
     redirectUrl.searchParams.set('success', 'true');
-    
+    redirectUrl.searchParams.set('access_token', accessToken);
+    redirectUrl.searchParams.set('twitter_user_id', userData.data.id);
+
     res.redirect(redirectUrl.toString());
     
   } catch (error) {
@@ -212,6 +214,58 @@ app.get('/api/auth/callback/twitter', async (req, res) => {
   } finally {
     oauthStates.delete(state);
     codeVerifiers.delete(state);
+  }
+});
+
+// Endpoint to verify if user actually engaged with a tweet
+app.post('/api/verify-engagement', async (req, res) => {
+  try {
+    const { accessToken, tweetId, userId } = req.body;
+
+    if (!accessToken || !tweetId || !userId) {
+      return res.status(400).json({ error: 'Missing required parameters' });
+    }
+
+    console.log('Verifying engagement for tweet:', tweetId, 'by user:', userId);
+
+    // Check if user liked the tweet
+    const likedResponse = await fetch(`https://api.twitter.com/2/users/${userId}/liked_tweets`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+
+    const likedData = await likedResponse.json();
+    const liked = likedData.data?.some((tweet: any) => tweet.id === tweetId);
+
+    if (liked) {
+      console.log('User liked the tweet');
+      return res.json({ verified: true, method: 'like' });
+    }
+
+    // Check if user retweeted the tweet (check their recent tweets)
+    const tweetsResponse = await fetch(`https://api.twitter.com/2/users/${userId}/tweets?max_results=100`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+
+    const tweetsData = await tweetsResponse.json();
+    const retweeted = tweetsData.data?.some((tweet: any) =>
+      tweet.referenced_tweets?.some((ref: any) => ref.type === 'retweeted' && ref.id === tweetId)
+    );
+
+    if (retweeted) {
+      console.log('User retweeted the tweet');
+      return res.json({ verified: true, method: 'retweet' });
+    }
+
+    console.log('User did not engage with the tweet');
+    return res.json({ verified: false });
+
+  } catch (error) {
+    console.error('Verification error:', error);
+    return res.status(500).json({ error: 'Verification failed' });
   }
 });
 

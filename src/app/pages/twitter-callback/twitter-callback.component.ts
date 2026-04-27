@@ -39,6 +39,8 @@ export class TwitterCallbackComponent implements OnInit {
     const twitterHandle = params.get('twitter_handle');
     const followersCount = params.get('followers_count');
     const isVerified = params.get('is_verified');
+    const accessToken = params.get('access_token');
+    const twitterUserId = params.get('twitter_user_id');
 
     if (error) {
       console.error('Twitter OAuth error:', error);
@@ -51,16 +53,18 @@ export class TwitterCallbackComponent implements OnInit {
       sessionStorage.setItem('twitter_auth_data', JSON.stringify({
         twitterHandle,
         followersCount: parseInt(followersCount),
-        isVerified: isVerified === 'true'
+        isVerified: isVerified === 'true',
+        accessToken,
+        twitterUserId
       }));
-      
+
       console.log('Twitter OAuth successful, redirecting to signup...');
-      this.router.navigate(['/signup'], { 
-        queryParams: { 
+      this.router.navigate(['/signup'], {
+        queryParams: {
           twitter_success: 'true',
           twitter_handle: twitterHandle,
           followers_count: followersCount
-        } 
+        }
       });
       return;
     }
