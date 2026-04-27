@@ -55,21 +55,28 @@ app.get('/api/auth/twitter', (req, res) => {
   const callbackURL = req.query.callbackURL || 'http://localhost:4200/auth/twitter/callback';
   const state = generateState();
   const { verifier, challenge } = generatePKCE();
-  
+
   // Store the callback URL and code verifier with the state
   oauthStates.set(state, callbackURL);
   codeVerifiers.set(state, verifier);
-  
+
+  console.log('Generated state:', state);
+  console.log('Stored callback URL:', callbackURL);
+  console.log('Code verifier stored:', !!verifier);
+
   // Redirect to Twitter OAuth 2.0 authorization URL with PKCE
   const twitterAuthUrl = `https://twitter.com/i/oauth2/authorize?` +
     `response_type=code&` +
     `client_id=${TWITTER_CLIENT_ID}&` +
     `redirect_uri=${encodeURIComponent(TWITTER_REDIRECT_URI)}&` +
-    `scope=users.read%20tweet.read&` +
+    `scope=users.read%20tweet.read%20offline.access&` +
     `state=${state}&` +
     `code_challenge=${challenge}&` +
     `code_challenge_method=S256`;
-  
+
+  console.log('Full Twitter Authorization URL:', twitterAuthUrl);
+  console.log('Redirect URI being used:', TWITTER_REDIRECT_URI);
+  console.log('Scopes being requested: users.read tweet.read offline.access');
   console.log('Redirecting to Twitter OAuth with PKCE');
   res.redirect(twitterAuthUrl);
 });
