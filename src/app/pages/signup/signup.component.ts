@@ -98,7 +98,9 @@ export class SignupComponent implements OnInit {
       this.error = 'Please verify your Twitter account has 1,000+ followers first.';
       return;
     }
-    
+
+    console.log('Submitting signup with followers:', this.followersCount);
+
     this.loading = true;
     this.error = '';
     const { email, password } = this.signupForm.value;
@@ -106,7 +108,7 @@ export class SignupComponent implements OnInit {
     this.authService.signup(email, password).subscribe({
       next: (user) => {
         this.loading = false;
-        
+
         const combinedUser = {
           ...user,
           twitterHandle: this.twitterHandle,
@@ -117,14 +119,16 @@ export class SignupComponent implements OnInit {
           balance: 5
         };
         this.authService.updateUser(combinedUser);
-        
+
         setTimeout(async () => {
           try {
+            console.log('Updating profile with twitter_followers:', this.followersCount);
             await this.supabase.updateProfile(user.id, {
               twitter_handle: this.twitterHandle,
               twitter_followers: this.followersCount,
               balance: combinedUser.balance
             });
+            console.log('Profile updated successfully');
             this.router.navigate(['/onboarding']);
           } catch (updateErr) {
             console.error('Failed to update profile data', updateErr);
