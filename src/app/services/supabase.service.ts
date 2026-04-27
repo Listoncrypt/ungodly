@@ -142,7 +142,6 @@ export class SupabaseService {
   }
 
   async declineUser(userId: string) {
-    // First delete the profile
     const { data, error } = await this.supabase
       .from('profiles')
       .delete()
@@ -150,12 +149,14 @@ export class SupabaseService {
 
     if (error) throw error;
 
-    // Then delete the auth account using admin API
-    const { error: deleteError } = await this.supabase.auth.admin.deleteUser(userId);
+    // Call Edge Function to delete auth account
+    const { error: functionError } = await this.supabase.functions.invoke('delete-user', {
+      body: { userId }
+    });
 
-    if (deleteError) {
-      console.error('Failed to delete auth account:', deleteError);
-      throw deleteError;
+    if (functionError) {
+      console.error('Failed to delete auth account via Edge Function:', functionError);
+      throw functionError;
     }
 
     return data;
