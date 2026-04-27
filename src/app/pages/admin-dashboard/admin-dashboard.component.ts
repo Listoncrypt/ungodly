@@ -51,7 +51,7 @@ import { SupabaseService, Profile } from '../../services/supabase.service';
                     <td class="py-4 px-2">{{ user.email }}</td>
                     <td class="py-4 px-2">
                       <a *ngIf="user.twitter_handle" href="https://x.com/{{ user.twitter_handle }}" target="_blank" class="text-blue-400 hover:text-blue-300 font-medium">
-                        @{{ user.twitter_handle }}
+                        {{ '@' + user.twitter_handle }}
                       </a>
                       <span *ngIf="!user.twitter_handle" class="text-gray-500">N/A</span>
                     </td>
