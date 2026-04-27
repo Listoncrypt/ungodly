@@ -40,6 +40,7 @@ import { SupabaseService, Profile } from '../../services/supabase.service';
                 <thead>
                   <tr class="text-gray-400 text-sm uppercase tracking-wider">
                     <th class="pb-4 px-2">User Email</th>
+                    <th class="pb-4 px-2">Twitter Handle</th>
                     <th class="pb-4 px-2">Role</th>
                     <th class="pb-4 px-2">Followers</th>
                     <th class="pb-4 px-2 text-right">Actions</th>
@@ -48,6 +49,12 @@ import { SupabaseService, Profile } from '../../services/supabase.service';
                 <tbody class="divide-y divide-gray-800">
                   <tr *ngFor="let user of unapprovedUsers" class="group hover:bg-white/5 transition-colors">
                     <td class="py-4 px-2">{{ user.email }}</td>
+                    <td class="py-4 px-2">
+                      <a *ngIf="user.twitter_handle" href="https://x.com/{{ user.twitter_handle }}" target="_blank" class="text-blue-400 hover:text-blue-300 font-medium">
+                        @{{ user.twitter_handle }}
+                      </a>
+                      <span *ngIf="!user.twitter_handle" class="text-gray-500">N/A</span>
+                    </td>
                     <td class="py-4 px-2">
                       <span class="text-xs font-mono bg-blue-900/30 text-blue-300 px-2 py-1 rounded">User</span>
                     </td>
