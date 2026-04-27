@@ -2,8 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
+import { AuthService, User } from '../../services/auth.service';
 import { SupabaseService } from '../../services/supabase.service';
+import { take } from 'rxjs/operators';
 
 export interface EngagementTask {
   id: string;
@@ -101,23 +102,34 @@ export class DashboardComponent implements OnInit {
   engageOnX(task: EngagementTask) {
     console.log('Opening X (Twitter)...', task.post_link);
     window.open(task.post_link || 'https://x.com', '_blank');
-    
+
     // Simulate validation and task completion
-    setTimeout(() => {
+    setTimeout(async () => {
       this.tasksComplete++;
-      
+
       let finalReward = task.reward;
       if (this.verified) {
         // 10% boost for verified twitter account
-        finalReward += finalReward * 0.10; 
+        finalReward += finalReward * 0.10;
       }
-      
+
       this.earnings += finalReward;
       this.balance += finalReward;
-      
+
+      // Save balance to database
+      this.authService.currentUser$.pipe(take(1)).subscribe(async (currentUser: User | null) => {
+        if (currentUser) {
+          try {
+            await this.supabase.updateProfile(currentUser.id, { balance: this.balance });
+          } catch (error) {
+            console.error('Failed to update balance:', error);
+          }
+        }
+      });
+
       // Mark task as done (remove from list)
       this.engagementTasks = this.engagementTasks.filter(t => t.id !== task.id);
-      
+
       alert(`Task validated! You earned $${finalReward.toFixed(2)}`);
     }, 2000);
   }
@@ -135,15 +147,26 @@ export class DashboardComponent implements OnInit {
       alert('Insufficient balance.');
       return;
     }
-    
+
     try {
       await this.supabase.createWithdrawal(this.withdrawalForm.amount, this.withdrawalForm.solanaAddress);
-      
+
       this.balance -= this.withdrawalForm.amount;
       this.withdrawals += this.withdrawalForm.amount;
-      
+
+      // Save balance to database
+      this.authService.currentUser$.pipe(take(1)).subscribe(async (currentUser: User | null) => {
+        if (currentUser) {
+          try {
+            await this.supabase.updateProfile(currentUser.id, { balance: this.balance });
+          } catch (error) {
+            console.error('Failed to update balance:', error);
+          }
+        }
+      });
+
       alert(`Withdrawal of $${this.withdrawalForm.amount} to ${this.withdrawalForm.solanaAddress} submitted successfully!`);
-      
+
       this.withdrawalForm.amount = 40;
       this.withdrawalForm.solanaAddress = '';
     } catch (error) {
