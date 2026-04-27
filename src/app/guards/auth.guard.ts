@@ -26,7 +26,7 @@ export class AuthGuard implements CanActivate {
       // Wait until the session is initialized (currentUser is not undefined)
       filter((user) => user !== undefined),
       take(1),
-      map(async (user: User | null) => {
+      switchMap(async (user: User | null) => {
         if (!user) {
           this.router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
           return false;
@@ -47,9 +47,14 @@ export class AuthGuard implements CanActivate {
           return true;
         }
 
-        // Authenticated but not approved - check if profile exists
+        // Authenticated but not approved - check if profile exists in database
         try {
-          const profile = await this.supabaseService.getProfile(user.id);
+          const { data: profile } = await this.supabaseService.supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', user.id)
+            .single();
+
           if (!profile) {
             // Profile doesn't exist - user was deleted, redirect to signup
             await this.authService.logout(false);
@@ -58,14 +63,16 @@ export class AuthGuard implements CanActivate {
           }
         } catch (error) {
           console.error('Error checking profile:', error);
+          // If error, assume profile doesn't exist and redirect to signup
+          await this.authService.logout(false);
+          this.router.navigate(['/signup'], { queryParams: { message: 'profile_removed' } });
+          return false;
         }
 
         // Profile exists but not approved - redirect to waiting-approval
         this.router.navigate(['/waiting-approval']);
         return false;
-      }),
-      // Convert the Observable<boolean> returned by map to Observable<boolean>
-      switchMap(result => result instanceof Promise ? from(result) : of(result))
+      })
     );
   }
 }
