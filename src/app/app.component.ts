@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -21,9 +22,9 @@ import { filter } from 'rxjs/operators';
             </a>
 
             <nav class="hidden md:flex items-center gap-6 text-sm text-slate-600">
+              <a *ngIf="isAdmin" routerLink="/admin-dashboard" class="text-gray-900 font-bold hover:text-blue-600 transition-colors">Admin Portal</a>
               <a routerLink="/login" class="hover:text-slate-900 transition-colors">Login</a>
               <a routerLink="/signup" class="hover:text-slate-900 transition-colors">Sign up</a>
-              <!-- <a routerLink="/dashboard" class="hover:text-slate-900 transition-colors">Dashboard</a> -->
             </nav>
 
             <button
@@ -42,6 +43,14 @@ import { filter } from 'rxjs/operators';
             *ngIf="isMobileMenuOpen"
             class="md:hidden mt-4 pt-4 border-t border-slate-200 space-y-2"
           >
+            <a
+              *ngIf="isAdmin"
+              routerLink="/admin-dashboard"
+              (click)="closeMobileMenu()"
+              class="block px-3 py-2 text-gray-900 font-bold hover:bg-gray-50 rounded-md transition-colors"
+            >
+              Admin Portal
+            </a>
             <a
               routerLink="/login"
               (click)="closeMobileMenu()"
@@ -77,8 +86,9 @@ export class AppComponent implements OnInit {
   title = 'Engagement Platform';
   isMobileMenuOpen = false;
   isLandingPage = true;
+  isAdmin = false;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthService) {}
 
   ngOnInit() {
     this.router.events
@@ -86,6 +96,10 @@ export class AppComponent implements OnInit {
       .subscribe((event: NavigationEnd) => {
         this.isLandingPage = event.url === '/';
       });
+
+    this.authService.currentUser$.subscribe(user => {
+      this.isAdmin = user?.role === 'admin';
+    });
   }
 
   toggleMobileMenu() {

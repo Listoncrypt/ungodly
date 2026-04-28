@@ -1,7 +1,8 @@
-import { Component, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, AfterViewInit, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-landing',
@@ -10,9 +11,11 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.css'],
 })
-export class LandingComponent implements AfterViewInit, OnDestroy {
+export class LandingComponent implements AfterViewInit, OnDestroy, OnInit {
   isMobileMenuOpen = false;
   isBookMeetModalOpen = false;
+  isAdmin = false;
+  isLoggedIn = false;
   
   bookMeetForm = {
     name: '',
@@ -23,7 +26,14 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
 
   private _observer: IntersectionObserver | null = null;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthService) {}
+
+  ngOnInit() {
+    this.authService.currentUser$.subscribe(user => {
+      this.isLoggedIn = !!user;
+      this.isAdmin = user?.role === 'admin';
+    });
+  }
 
   toggleMobileMenu() {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;

@@ -136,6 +136,23 @@
           Sign up
         </a> -->
         <a
+          *ngIf="isAdmin"
+          routerLink="/admin-dashboard"
+          (click)="closeMobileMenu()"
+          class="block px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-bold"
+        >
+          Admin Portal
+        </a>
+        <a
+          *ngIf="isLoggedIn"
+          routerLink="/dashboard"
+          (click)="closeMobileMenu()"
+          class="block px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-bold"
+        >
+          Dashboard
+        </a>
+        <a
+          *ngIf="!isLoggedIn"
           routerLink="/login"
           (click)="closeMobileMenu()"
           class="flex items-center gap-2 px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-bold"
