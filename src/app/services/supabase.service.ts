@@ -13,6 +13,7 @@ export interface Profile {
   twitter_followers?: number;
   twitter_handle?: string;
   balance?: number;
+  is_verified?: boolean;
 }
 
 export interface PlatformTask {

@@ -20,6 +20,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   username = 'user123';
   balance = 0.0;
   verified = false;
+  isVerifiedAccount = false;
   boost = 0;
   tasksComplete = 0;
   earnings = 0.0;
@@ -51,7 +52,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.authService.currentUser$.subscribe(currentUser => {
       if (currentUser) {
         this.username = currentUser.email.split('@')[0];
-        this.verified = currentUser.twitterId ? true : (currentUser.verified || false);
+        // Check for verified status from profile
+        this.isVerifiedAccount = (currentUser as any).is_verified || false;
+        this.verified = this.isVerifiedAccount;
         this.boost = currentUser.boost || 0;
         this.isAdmin = currentUser.role === 'admin';
 
@@ -143,24 +146,38 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   async verifyTask(task: PlatformTask) {
     const tweetId = this.extractTweetId(task.post_link || '');
     if (!tweetId) {
-      alert('Invalid task link. Cannot verify engagement.');
+      alert('Unable to extract Tweet ID from the link. Please contact support.');
       return;
     }
 
+    this.verifyingTaskId = task.id;
     console.log('Verifying engagement for tweet:', tweetId);
 
-    const isVerified = await this.verifyEngagement(tweetId);
+    const result = await this.verifyEngagement(tweetId);
 
-    if (!isVerified) {
+    if (result === 'missing_auth') {
+      alert('Your Twitter session has expired. Please log out and log back in with Twitter to continue earning.');
+      this.verifyingTaskId = null;
+      return;
+    }
+
+    if (!result) {
       alert('Engagement verification failed. Please make sure you liked or retweeted the post to earn rewards.');
+      this.verifyingTaskId = null;
       return;
     }
 
     this.tasksComplete++;
 
     let finalReward = task.reward;
-    if (this.verified) {
-      finalReward += finalReward * 0.10;
+    // Apply task boost ONLY if user is twitter verified
+    if (this.isVerifiedAccount) {
+      finalReward += task.boost;
+    }
+
+    // Apply follower-based percentage boost if applicable
+    if (this.boost > 0) {
+      finalReward += finalReward * (this.boost / 100);
     }
 
     this.earnings += finalReward;
@@ -236,13 +253,13 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     return match ? match[1] : null;
   }
 
-  private async verifyEngagement(tweetId: string): Promise<boolean> {
+  private async verifyEngagement(tweetId: string): Promise<boolean | string> {
     const accessToken = localStorage.getItem('twitter_access_token');
     const twitterUserId = localStorage.getItem('twitter_user_id');
 
     if (!accessToken || !twitterUserId) {
       console.error('Missing Twitter credentials for verification');
-      return false;
+      return 'missing_auth';
     }
 
     try {
@@ -257,6 +274,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           userId: twitterUserId
         })
       });
+
+      if (!response.ok) {
+        return false;
+      }
 
       const result = await response.json();
       return result.verified;

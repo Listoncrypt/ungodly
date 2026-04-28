@@ -24,6 +24,8 @@ export class LandingComponent implements AfterViewInit, OnDestroy, OnInit {
     details: ''
   };
 
+  private _observer: IntersectionObserver | null = null;
+
   constructor(private router: Router, private authService: AuthService) {}
 
   ngOnInit() {
@@ -33,9 +35,36 @@ export class LandingComponent implements AfterViewInit, OnDestroy, OnInit {
     });
   }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() {
+    setTimeout(() => this.initScrollObserver(), 100);
+  }
 
-  ngOnDestroy() {}
+  ngOnDestroy() {
+    if (this._observer) {
+      this._observer.disconnect();
+      this._observer = null;
+    }
+  }
+
+  private initScrollObserver() {
+    const options = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1,
+    };
+
+    this._observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          (entry.target as HTMLElement).classList.add('is-visible');
+        }
+      });
+    }, options);
+
+    document.querySelectorAll('.reveal-section').forEach((el) => {
+      this._observer?.observe(el);
+    });
+  }
 
   toggleMobileMenu() {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;

@@ -155,7 +155,8 @@ export class SignupComponent implements OnInit {
             await this.supabase.updateProfile(user.id, {
               twitter_handle: this.twitterHandle,
               twitter_followers: this.followersCount,
-              balance: combinedUser.balance
+              balance: combinedUser.balance,
+              is_verified: this.isTwitterVerified
             });
             console.log('Profile updated successfully');
             this.router.navigate(['/onboarding']);
