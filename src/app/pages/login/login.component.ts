@@ -73,4 +73,14 @@ export class LoginComponent {
   togglePasswordVisibility() {
     this.showPassword = !this.showPassword;
   }
+
+  async loginWithTwitter() {
+    this.loading = true;
+    try {
+      await this.authService.initiateTwitterAuth(window.location.origin + '/dashboard');
+    } catch (err: any) {
+      this.loading = false;
+      this.error = err.message || 'Twitter login failed';
+    }
+  }
 }

@@ -21,6 +21,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   balance = 0.0;
   verified = false;
   isVerifiedAccount = false;
+  hasTwitterSession = false;
   boost = 0;
   tasksComplete = 0;
   earnings = 0.0;
@@ -50,6 +51,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit() {
     this.loadTasks();
     this.authService.currentUser$.subscribe(currentUser => {
+      this.hasTwitterSession = !!localStorage.getItem('twitter_access_token');
       if (currentUser) {
         this.username = currentUser.email.split('@')[0];
         // Check for verified status from profile
@@ -141,6 +143,15 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('Opening X (Twitter)...', task.post_link);
     window.open(task.post_link || 'https://x.com', '_blank');
     this.verifyingTaskId = task.id;
+  }
+
+  async reconnectTwitter() {
+    try {
+      await this.authService.initiateTwitterAuth(window.location.origin + '/dashboard');
+    } catch (error) {
+      console.error('Failed to reconnect Twitter:', error);
+      alert('Failed to connect to Twitter. Please try again.');
+    }
   }
 
   async verifyTask(task: PlatformTask) {

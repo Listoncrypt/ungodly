@@ -62,6 +62,18 @@ export class AuthService {
         twitterHandle: twitterHandle,
         twitterId: twitterId
       };
+
+      // Auto-capture Twitter token if available in session
+      this.supabaseService.client.auth.getSession().then(({ data }) => {
+        const session = data.session;
+        if (session?.provider_token) {
+          localStorage.setItem('twitter_access_token', session.provider_token);
+          if (twitterId) {
+            localStorage.setItem('twitter_user_id', twitterId);
+          }
+        }
+      });
+
       this.currentUserSubject.next(user);
       localStorage.setItem('currentUser', JSON.stringify(user));
     });
@@ -102,12 +114,6 @@ export class AuthService {
     );
   }
 
-  async initiateTwitterAuth(): Promise<void> {
-    // Redirect to backend Twitter OAuth endpoint
-    const callbackURL = `${window.location.origin}/auth/twitter/callback`;
-    window.location.href = `${environment.backendUrl}/api/auth/twitter?callbackURL=${encodeURIComponent(callbackURL)}`;
-  }
-
   exchangeCodeForToken(code: string): Observable<User> {
     // Supabase handles the callback automatically on the client side when redirecting to a page.
     // We just need to check the session.
@@ -126,6 +132,20 @@ export class AuthService {
 
   updateUser(user: User): void {
     this.currentUserSubject.next(user);
+  }
+
+  async initiateTwitterAuth(redirectTo?: string) {
+    const origin = window.location.origin;
+    const { data, error } = await this.supabaseService.client.auth.signInWithOAuth({
+      provider: 'twitter',
+      options: {
+        redirectTo: redirectTo || `${origin}/signup`,
+        scopes: 'users.read tweet.read tweet.write like.read like.write'
+      }
+    });
+
+    if (error) throw error;
+    return data;
   }
 
   logout(redirect: boolean = true): Promise<void> {
