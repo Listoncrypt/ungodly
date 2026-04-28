@@ -170,7 +170,6 @@ export class SupabaseService {
 
       if (functionError) {
         console.error('Failed to confirm email via Edge Function:', functionError);
-        alert('User approved but email confirmation failed. Please manually confirm in Supabase Dashboard.');
         // Don't throw error - user is approved even if email confirmation fails
       } else {
         console.log('Email confirmed successfully');

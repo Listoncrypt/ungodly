@@ -123,7 +123,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
       this.unapprovedUsers = this.unapprovedUsers.filter(u => u.id !== userId);
       this.loadRegisteredUsers();
       this.updateTabCounts();
-      alert('User access granted!');
+      alert('User approved successfully.');
     } catch (error) {
       console.error('Error approving user:', error);
       alert('Failed to approve user');
