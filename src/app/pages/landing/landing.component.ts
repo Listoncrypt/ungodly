@@ -71,7 +71,7 @@ export class LandingComponent implements AfterViewInit, OnDestroy, OnInit {
   }
 
   joinTelegram() {
-    window.open('https://t.me/Ungodlyachvportfolio', '_blank');
+    window.open('https://t.me/+3rl2v5b7H-9mNDFk', '_blank');
   }
 
   ngAfterViewInit(): void {
