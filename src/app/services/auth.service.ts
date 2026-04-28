@@ -136,16 +136,9 @@ export class AuthService {
 
   async initiateTwitterAuth(redirectTo?: string) {
     const origin = window.location.origin;
-    const { data, error } = await this.supabaseService.client.auth.signInWithOAuth({
-      provider: 'twitter',
-      options: {
-        redirectTo: redirectTo || `${origin}/signup`,
-        scopes: 'users.read tweet.read tweet.write like.read like.write'
-      }
-    });
-
-    if (error) throw error;
-    return data;
+    const backendUrl = environment.backendUrl;
+    const callbackURL = redirectTo || `${origin}/signup`;
+    window.location.href = `${backendUrl}/api/auth/twitter?callbackURL=${encodeURIComponent(callbackURL)}`;
   }
 
   logout(redirect: boolean = true): Promise<void> {
