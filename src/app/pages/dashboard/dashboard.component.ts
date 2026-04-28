@@ -7,15 +7,7 @@ import { SupabaseService, PlatformTask } from '../../services/supabase.service';
 import { environment } from '../../../environments/environment';
 import { take } from 'rxjs/operators';
 
-export interface EngagementTask {
-  id: string;
-  title: string;
-  image: string;
-  reward: number;
-  boost: number;
-  actions: string;
-  post_link?: string;
-}
+
 
 @Component({
   selector: 'app-dashboard',
@@ -38,7 +30,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   totalCreators = 0;
   totalPlatformEarnings = 0.0;
 
-  engagementTasks: EngagementTask[] = [];
+  engagementTasks: PlatformTask[] = [];
 
   withdrawalForm = {
     amount: 40,
