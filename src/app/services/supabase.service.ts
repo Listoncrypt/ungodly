@@ -141,6 +141,23 @@ export class SupabaseService {
     return data as Profile[];
   }
 
+  async fixLegacyBalances() {
+    const { data: profiles } = await this.supabase
+      .from('profiles')
+      .select('id, balance')
+      .eq('role', 'user');
+
+    if (profiles) {
+      for (const profile of profiles) {
+        const newBalance = Math.max(0, (profile.balance || 0) - 5);
+        await this.supabase
+          .from('profiles')
+          .update({ balance: newBalance })
+          .eq('id', profile.id);
+      }
+    }
+  }
+
   async approveUser(userId: string) {
     // Get user email before updating
     const { data: profile } = await this.supabase

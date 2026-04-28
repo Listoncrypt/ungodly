@@ -136,6 +136,17 @@
 
     <!-- TAB: Registered Users -->
     <section *ngIf="activeTab === 'registered'" class="tab-content">
+      <div class="mb-5 flex justify-end">
+        <button
+          (click)="clearLegacyBonuses()"
+          class="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors text-sm font-bold border border-red-200"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+          Clear Legacy Bonuses ($5)
+        </button>
+      </div>
       <div *ngIf="loadingRegistered" class="flex items-center justify-center py-16">
         <div class="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-gray-900"></div>
       </div>
@@ -212,18 +223,7 @@
                   placeholder="Like + Comment..."
                 >
               </div>
-              <button
-                (click)="clearLegacyBonuses()"
-                class="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors text-sm font-bold border border-red-200"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                </svg>
-                Clear Legacy Bonuses ($5)
-              </button>
-            </div>
-      
-            <div class="grid md:grid-cols-4 gap-4 mb-8">
+              <div class="grid grid-cols-2 gap-3">
                 <div>
                   <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Reward ($)</label>
                   <input
