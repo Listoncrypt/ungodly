@@ -54,6 +54,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     const twitterSuccess = params.get('success') === 'true';
     const error = params.get('error');
 
+    console.log('[Dashboard] Checking OAuth callback params:', { twitterSuccess, error, params: Object.fromEntries(params) });
+
     if (twitterSuccess) {
       const accessToken = params.get('access_token');
       const twitterUserId = params.get('twitter_user_id');
@@ -61,14 +63,20 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       const followersCount = params.get('followers_count');
       const isVerified = params.get('is_verified') === 'true';
 
+      console.log('[Dashboard] OAuth callback data:', { accessToken: !!accessToken, twitterUserId, twitterHandle, followersCount, isVerified });
+
+      // Store token immediately before any async operations
       if (accessToken) {
         localStorage.setItem('twitter_access_token', accessToken);
-        console.log('[Dashboard] Twitter access token saved');
+        console.log('[Dashboard] Twitter access token saved to localStorage');
       }
       if (twitterUserId) {
         localStorage.setItem('twitter_user_id', twitterUserId);
-        console.log('[Dashboard] Twitter user ID saved');
+        console.log('[Dashboard] Twitter user ID saved to localStorage');
       }
+
+      // Update hasTwitterSession flag immediately
+      this.hasTwitterSession = !!localStorage.getItem('twitter_access_token');
 
       // Update profile with Twitter data
       this.authService.currentUser$.pipe(take(1)).subscribe(async (currentUser: any) => {
@@ -80,16 +88,21 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
               is_verified: isVerified
             });
             console.log('[Dashboard] Profile updated with Twitter data');
-            // Reload to get updated data
-            window.location.reload();
+            alert('Twitter connected successfully!');
+            // Clear query params and reload to get updated data
+            window.history.replaceState({}, document.title, window.location.pathname);
+            setTimeout(() => window.location.reload(), 500);
           } catch (err) {
             console.error('[Dashboard] Failed to update profile:', err);
+            alert('Twitter connected but profile update failed. Please try again.');
+            window.history.replaceState({}, document.title, window.location.pathname);
           }
+        } else {
+          console.error('[Dashboard] No current user found');
+          alert('Please log in again to complete Twitter connection.');
         }
       });
-
-      // Clear the query params
-      window.history.replaceState({}, document.title, window.location.pathname);
+      return; // Don't continue with normal init until after reload
     }
 
     if (error) {
@@ -100,6 +113,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadTasks();
     this.authService.currentUser$.subscribe(currentUser => {
       this.hasTwitterSession = !!localStorage.getItem('twitter_access_token');
+      console.log('[Dashboard] hasTwitterSession:', this.hasTwitterSession);
       if (currentUser) {
         this.username = currentUser.email.split('@')[0];
         // Check for verified status from profile
