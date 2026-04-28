@@ -8,6 +8,10 @@
   --brand-logo-light: #e5fbff;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 html,
 body {
   height: 100%;

@@ -1,94 +1,120 @@
-Custom styles for the landing component
+/* Premium Landing Page Styles */
 
 /* Scroll reveal base */
 .reveal {
   opacity: 0;
-  transform: translateY(18px);
+  transform: translateY(30px) scale(0.98);
   transition:
-    opacity 600ms cubic-bezier(0.2, 0.9, 0.2, 1),
-    transform 600ms cubic-bezier(0.2, 0.9, 0.2, 1);
+    opacity 1000ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1000ms cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform, opacity;
 }
+
 .reveal.is-visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 
-/* Floating subtle motion for cards */
-.floaty {
-  animation: floaty 6s ease-in-out infinite;
-}
-@keyframes floaty {
-  0% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
-
-/* Button emphasis */
-.btn-animate {
-  transition:
-    transform 180ms ease,
-    box-shadow 180ms ease;
-}
-.btn-animate:hover {
-  transform: translateY(-3px) scale(1.01);
-  box-shadow: 0 10px 25px rgba(2, 6, 23, 0.08);
-}
-
-/* Card hover */
-.card-tilt {
-  transition:
-    transform 300ms ease,
-    box-shadow 300ms ease;
-}
-.card-tilt:hover {
-  transform: translateY(-6px) rotate(-0.3deg) scale(1.01);
-  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.08);
-}
-
-/* Partner logos */
-.logo-animate {
-  transition:
-    transform 300ms ease,
-    filter 300ms ease;
-}
-.logo-animate:hover {
-  transform: scale(1.06) translateY(-4px);
-  filter: brightness(1.05);
-}
-
-/* Small decorative underline for headings */
-.heading-underline::after {
-  content: "";
-  display: block;
-  width: 48px;
-  height: 4px;
-  margin: 12px auto 0;
-  background: linear-gradient(90deg, #111827, #6b7280);
-  border-radius: 4px;
-  opacity: 0.9;
-}
-
-/* Slight backdrop glass for hero button */
-.hero-btn {
-  box-shadow: 0 8px 30px rgba(2, 6, 23, 0.06);
-}
-
-/* initial state: invisible and slightly shifted down */
-.reveal-item {
+/* Staggered entrance for lists/grids */
+.stagger-item {
   opacity: 0;
-  transform: translateY(30px);
-  transition: all 0.8s ease-out;
+  transform: translateY(20px);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* active state: fully visible and in place */
-.reveal-item.active {
+.reveal.is-visible .stagger-item {
   opacity: 1;
   transform: translateY(0);
+}
+
+.reveal.is-visible .stagger-item:nth-child(1) { transition-delay: 100ms; }
+.reveal.is-visible .stagger-item:nth-child(2) { transition-delay: 200ms; }
+.reveal.is-visible .stagger-item:nth-child(3) { transition-delay: 300ms; }
+.reveal.is-visible .stagger-item:nth-child(4) { transition-delay: 400ms; }
+
+/* Floating motion for hero elements */
+.float-slow {
+  animation: floatSlow 8s ease-in-out infinite;
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Premium Button Animation */
+.btn-premium {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-premium::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120%;
+  height: 120%;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translate(-50%, -50%) scale(0);
+  border-radius: 50%;
+  transition: transform 0.6s;
+}
+
+.btn-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+}
+
+.btn-premium:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Glassmorphism for floating UI elements */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Section Title Highlight */
+.section-title {
+  position: relative;
+  display: inline-block;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 40%;
+  height: 4px;
+  background: #000;
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+
+.reveal.is-visible .section-title::after {
+  width: 100%;
+}
+
+/* Custom Cursor interactions (Subtle) */
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-8px) scale(1.02);
+}
+
+/* Logo pulse */
+.logo-pulse {
+  animation: logoPulse 4s ease-in-out infinite;
+}
+
+@keyframes logoPulse {
+  0%, 100% { filter: drop-shadow(0 0 0px rgba(0,0,0,0)); }
+  50% { filter: drop-shadow(0 0 10px rgba(0,0,0,0.05)); }
 }

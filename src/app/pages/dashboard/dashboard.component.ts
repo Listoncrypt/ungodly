@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService, User } from '../../services/auth.service';
 import { SupabaseService } from '../../services/supabase.service';
+import { environment } from '../../../environments/environment';
 import { take } from 'rxjs/operators';
 
 export interface EngagementTask {
@@ -16,12 +17,6 @@ export interface EngagementTask {
   post_link?: string;
 }
 
-interface SidebarMenu {
-  icon: string;
-  label: string;
-  href: string;
-}
-
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -29,7 +24,7 @@ interface SidebarMenu {
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   username = 'user123';
   balance = 0.0;
   verified = false;
@@ -37,28 +32,24 @@ export class DashboardComponent implements OnInit {
   tasksComplete = 0;
   earnings = 0.0;
   withdrawals = 0.0;
+  userWithdrawals: any[] = [];
+  isAdmin = false;
 
   totalCreators = 0;
   totalPlatformEarnings = 0.0;
 
-  sidebarMenus: SidebarMenu[] = [
-    { icon: '📊', label: 'Dashboard', href: '#' },
-    { icon: '🛡️', label: 'Admin', href: '/admin-dashboard' },
-  ];
-
   engagementTasks: EngagementTask[] = [];
 
-  showWithdrawal = false;
   withdrawalForm = {
     amount: 40,
     solanaAddress: '',
   };
 
-  activeMenu = 'dashboard';
   userInitial = 'X';
+  private _observer: IntersectionObserver | null = null;
 
   constructor(
-    private authService: AuthService, 
+    private authService: AuthService,
     private supabase: SupabaseService,
     private router: Router
   ) {}
@@ -70,18 +61,33 @@ export class DashboardComponent implements OnInit {
         this.username = currentUser.email.split('@')[0];
         this.verified = currentUser.twitterId ? true : (currentUser.verified || false);
         this.boost = currentUser.boost || 0;
-        
-        // Only override if the user has a stored balance, otherwise start at 0
+        this.isAdmin = currentUser.role === 'admin';
+
         if (currentUser.balance !== undefined) {
           this.balance = currentUser.balance;
         }
-        
+
         this.userInitial = this.username.charAt(0).toUpperCase();
-        
-        // Hide Admin menu if not admin
-        if (currentUser.role !== 'admin') {
-          this.sidebarMenus = this.sidebarMenus.filter(m => m.label !== 'Admin');
-        }
+
+        // Load withdrawal history
+        this.loadUserWithdrawals(currentUser.id);
+
+        // Subscribe to real-time withdrawal status updates
+        this.supabase.client
+          .channel(`withdrawals:user_id=eq.${currentUser.id}`)
+          .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'withdrawals',
+            filter: `user_id=eq.${currentUser.id}`
+          }, (payload: any) => {
+            const updated = payload.new;
+            const idx = this.userWithdrawals.findIndex((w: any) => w.id === updated.id);
+            if (idx !== -1) {
+              this.userWithdrawals[idx] = updated;
+            }
+          })
+          .subscribe();
       }
     });
 
@@ -89,6 +95,41 @@ export class DashboardComponent implements OnInit {
       this.totalCreators = stats.totalCreators;
       this.totalPlatformEarnings = stats.totalEarnings;
     });
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => this.initScrollObserver(), 100);
+  }
+
+  ngOnDestroy(): void {
+    if (this._observer) {
+      this._observer.disconnect();
+      this._observer = null;
+    }
+  }
+
+  private initScrollObserver() {
+    const options = { root: null, rootMargin: '0px', threshold: 0.1 };
+    this._observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          (entry.target as HTMLElement).classList.add('is-visible');
+        }
+      });
+    }, options);
+
+    document.querySelectorAll('.reveal-section').forEach((el) => {
+      this._observer?.observe(el);
+    });
+  }
+
+  async loadUserWithdrawals(userId: string) {
+    try {
+      this.userWithdrawals = await this.supabase.getUserWithdrawals(userId);
+      this.withdrawals = this.userWithdrawals.reduce((sum: number, w: any) => sum + (w.amount || 0), 0);
+    } catch (error) {
+      console.error('Failed to load withdrawals:', error);
+    }
   }
 
   async loadTasks() {
@@ -103,7 +144,6 @@ export class DashboardComponent implements OnInit {
     console.log('Opening X (Twitter)...', task.post_link);
     window.open(task.post_link || 'https://x.com', '_blank');
 
-    // Extract tweet ID for verification
     const tweetId = this.extractTweetId(task.post_link || '');
 
     if (!tweetId) {
@@ -111,7 +151,6 @@ export class DashboardComponent implements OnInit {
       return;
     }
 
-    // Wait for user to engage, then verify
     setTimeout(async () => {
       console.log('Verifying engagement for tweet:', tweetId);
 
@@ -126,15 +165,13 @@ export class DashboardComponent implements OnInit {
 
       let finalReward = task.reward;
       if (this.verified) {
-        // 10% boost for verified twitter account
         finalReward += finalReward * 0.10;
       }
 
       this.earnings += finalReward;
       this.balance += finalReward;
 
-      // Save balance to database
-      this.authService.currentUser$.pipe(take(1)).subscribe(async (currentUser: User | null) => {
+      this.authService.currentUser$.pipe(take(1)).subscribe(async (currentUser: User | null | undefined) => {
         if (currentUser) {
           try {
             await this.supabase.updateProfile(currentUser.id, { balance: this.balance });
@@ -144,11 +181,10 @@ export class DashboardComponent implements OnInit {
         }
       });
 
-      // Mark task as done (remove from list)
       this.engagementTasks = this.engagementTasks.filter(t => t.id !== task.id);
 
       alert(`Task validated! You earned $${finalReward.toFixed(2)}`);
-    }, 5000); // Increased to 5 seconds to give user time to engage
+    }, 5000);
   }
 
   async submitWithdrawal() {
@@ -171,25 +207,29 @@ export class DashboardComponent implements OnInit {
       this.balance -= this.withdrawalForm.amount;
       this.withdrawals += this.withdrawalForm.amount;
 
-      // Save balance to database
-      this.authService.currentUser$.pipe(take(1)).subscribe(async (currentUser: User | null) => {
+      this.authService.currentUser$.pipe(take(1)).subscribe(async (currentUser: User | null | undefined) => {
         if (currentUser) {
           try {
             await this.supabase.updateProfile(currentUser.id, { balance: this.balance });
+            await this.loadUserWithdrawals(currentUser.id);
           } catch (error) {
             console.error('Failed to update balance:', error);
           }
         }
       });
 
-      alert(`Withdrawal of $${this.withdrawalForm.amount} to ${this.withdrawalForm.solanaAddress} submitted successfully!`);
+      alert(`Withdrawal of $${this.withdrawalForm.amount} submitted! It will appear as pending until the admin processes it.`);
 
       this.withdrawalForm.amount = 40;
       this.withdrawalForm.solanaAddress = '';
     } catch (error) {
       console.error('Withdrawal failed', error);
-      alert('Failed to submit withdrawal request. Please check if your account is fully verified.');
+      alert('Failed to submit withdrawal request.');
     }
+  }
+
+  goToAdmin() {
+    this.router.navigate(['/admin-dashboard']);
   }
 
   logout() {
@@ -211,7 +251,7 @@ export class DashboardComponent implements OnInit {
     }
 
     try {
-      const response = await fetch('https://ungodly-backend.onrender.com/api/verify-engagement', {
+      const response = await fetch(`${environment.backendUrl}/api/verify-engagement`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -230,13 +270,4 @@ export class DashboardComponent implements OnInit {
       return false;
     }
   }
-
-  setActiveMenu(menu: string) {
-    if (menu === 'Admin') {
-      this.router.navigate(['/admin-dashboard']);
-    }
-    this.activeMenu = menu;
-  }
 }
-
-

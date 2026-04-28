@@ -55,32 +55,45 @@ export class SignupComponent implements OnInit {
       const authData = sessionStorage.getItem('twitter_auth_data');
       if (authData) {
         const data = JSON.parse(authData);
-        this.twitterHandle = data.twitterHandle;
-        this.followersCount = data.followersCount;
-        this.isTwitterVerified = data.isVerified;
+        this.twitterHandle = data.twitterHandle || params.get('twitter_handle') || '';
+        this.followersCount = data.followersCount || parseInt(params.get('followers_count') || '0');
+        this.isTwitterVerified = data.isVerified || params.get('is_verified') === 'true';
 
-        if (this.followersCount >= 1000) {
-          this.twitterVerified = true;
-          this.error = '';
-        } else {
-          this.twitterVerified = false;
-          this.error = `Your account has ${this.followersCount} followers. You need at least 1,000 followers to sign up.`;
-        }
-
-        // Store access token and user ID in localStorage for task verification
-        if (data.accessToken) {
-          localStorage.setItem('twitter_access_token', data.accessToken);
-        }
-        if (data.twitterUserId) {
-          localStorage.setItem('twitter_user_id', data.twitterUserId);
-        }
-
-        // Update form with Twitter handle
-        this.signupForm.patchValue({ twitterHandle: this.twitterHandle });
-
-        // Clear the query params
-        window.history.replaceState({}, document.title, window.location.pathname);
+        console.log('Twitter data loaded:', {
+          handle: this.twitterHandle,
+          followers: this.followersCount,
+          verified: this.isTwitterVerified
+        });
+      } else {
+        // Fallback to query params if sessionStorage is empty
+        this.twitterHandle = params.get('twitter_handle') || '';
+        this.followersCount = parseInt(params.get('followers_count') || '0');
+        this.isTwitterVerified = params.get('is_verified') === 'true';
+        console.log('Using query params fallback:', {
+          handle: this.twitterHandle,
+          followers: this.followersCount
+        });
       }
+
+      // Store access token and user ID in localStorage for task verification
+      const accessToken = params.get('access_token');
+      const twitterUserId = params.get('twitter_user_id');
+      if (accessToken) {
+        localStorage.setItem('twitter_access_token', accessToken);
+      }
+      if (twitterUserId) {
+        localStorage.setItem('twitter_user_id', twitterUserId);
+      }
+
+      // Update form with Twitter handle
+      this.signupForm.patchValue({ twitterHandle: this.twitterHandle });
+
+      // Twitter connected successfully — admin approval handles access control
+      this.twitterVerified = true;
+      this.error = '';
+
+      // Clear the query params
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }
 

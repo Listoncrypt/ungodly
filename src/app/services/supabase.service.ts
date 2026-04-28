@@ -31,8 +31,8 @@ export interface PlatformTask {
 })
 export class SupabaseService {
   private supabase: SupabaseClient;
-  private currentUserSubject = new BehaviorSubject<SupabaseUser | null>(null);
-  private currentProfileSubject = new BehaviorSubject<Profile | null>(null);
+  private currentUserSubject = new BehaviorSubject<SupabaseUser | null | undefined>(undefined);
+  private currentProfileSubject = new BehaviorSubject<Profile | null | undefined>(undefined);
 
   currentUser$ = this.currentUserSubject.asObservable();
   currentProfile$ = this.currentProfileSubject.asObservable();
@@ -55,11 +55,11 @@ export class SupabaseService {
     return this.supabase;
   }
 
-  get currentUser(): SupabaseUser | null {
+  get currentUser(): SupabaseUser | null | undefined {
     return this.currentUserSubject.value;
   }
 
-  get currentProfile(): Profile | null {
+  get currentProfile(): Profile | null | undefined {
     return this.currentProfileSubject.value;
   }
 
@@ -124,7 +124,18 @@ export class SupabaseService {
       .from('profiles')
       .select('*')
       .eq('is_approved', false)
-      .gte('twitter_followers', 1000)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data as Profile[];
+  }
+
+  async getAllRegisteredUsers() {
+    const { data, error } = await this.supabase
+      .from('profiles')
+      .select('*')
+      .eq('is_approved', true)
+      .eq('role', 'user')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -132,12 +143,42 @@ export class SupabaseService {
   }
 
   async approveUser(userId: string) {
+    // Get user email before updating
+    const { data: profile } = await this.supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', userId)
+      .single();
+
+    console.log('Approving user - Profile:', profile);
+
     const { data, error } = await this.supabase
       .from('profiles')
       .update({ is_approved: true })
       .eq('id', userId);
-      
+
     if (error) throw error;
+
+    // Call Edge Function to confirm user email using email instead of userId
+    if (profile?.email) {
+      console.log('Calling confirm-email Edge Function with email:', profile.email);
+      const { data: functionData, error: functionError } = await this.supabase.functions.invoke('confirm-email', {
+        body: { email: profile.email }
+      });
+
+      console.log('Edge Function response:', { data: functionData, error: functionError });
+
+      if (functionError) {
+        console.error('Failed to confirm email via Edge Function:', functionError);
+        alert('User approved but email confirmation failed. Please manually confirm in Supabase Dashboard.');
+        // Don't throw error - user is approved even if email confirmation fails
+      } else {
+        console.log('Email confirmed successfully');
+      }
+    } else {
+      console.error('No email found in profile');
+    }
+
     return data;
   }
 
@@ -160,6 +201,28 @@ export class SupabaseService {
     }
 
     return data;
+  }
+
+  /**
+   * Complete removal/ban of a user.
+   */
+  async deleteUserAccount(userId: string) {
+    // 1. Delete from profiles
+    const { error: profileError } = await this.supabase
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
+    
+    if (profileError) throw profileError;
+
+    // 2. Call Edge Function to delete auth account (this actually bans them from logging in)
+    const { error: authError } = await this.supabase.functions.invoke('delete-user', {
+      body: { userId }
+    });
+
+    if (authError) throw authError;
+    
+    return true;
   }
 
   async profileExists(userId: string): Promise<boolean> {
@@ -224,6 +287,17 @@ export class SupabaseService {
     return data;
   }
 
+  async getCompletedWithdrawals() {
+    const { data, error } = await this.supabase
+      .from('withdrawals')
+      .select('*')
+      .eq('status', 'completed')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
+  }
+
   async processWithdrawal(id: string) {
     const { data, error } = await this.supabase
       .from('withdrawals')
@@ -232,6 +306,17 @@ export class SupabaseService {
 
     if (error) throw error;
     return data;
+  }
+
+  async getUserWithdrawals(userId: string) {
+    const { data, error } = await this.supabase
+      .from('withdrawals')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
   }
 
   async getPlatformStats() {

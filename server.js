@@ -178,23 +178,11 @@ app.get('/api/auth/callback/twitter', async (req, res) => {
     const followersCount = userData.data?.public_metrics?.followers_count || 0;
     const isVerified = userData.data?.verified || false;
     const twitterHandle = userData.data?.username || '';
-    
+
     console.log('User data:', { twitterHandle, followersCount, isVerified });
-    
-    // Verify follower count >= 1000
-    if (followersCount < 1000) {
-      console.log('Verification failed: User has less than 1000 followers');
-      const redirectUrl = new URL(callbackURL);
-      redirectUrl.searchParams.set('error', 'Verification failed: Minimum 1,000 followers required');
-      redirectUrl.searchParams.set('followers_count', followersCount);
-      redirectUrl.searchParams.set('success', 'false');
-      oauthStates.delete(state);
-      codeVerifiers.delete(state);
-      return res.redirect(redirectUrl.toString());
-    }
-    
-    // Success: Redirect back to frontend with user data
-    console.log('Verification successful: User has 1000+ followers');
+
+    // Success: Redirect back to frontend with user data (admin approval handles access control)
+    console.log('Twitter OAuth successful, redirecting with user data');
     const redirectUrl = new URL(callbackURL);
     redirectUrl.searchParams.set('twitter_handle', twitterHandle);
     redirectUrl.searchParams.set('followers_count', followersCount);
@@ -236,7 +224,7 @@ app.post('/api/verify-engagement', async (req, res) => {
     });
 
     const likedData = await likedResponse.json();
-    const liked = likedData.data?.some((tweet: any) => tweet.id === tweetId);
+    const liked = likedData.data?.some(tweet => tweet.id === tweetId);
 
     if (liked) {
       console.log('User liked the tweet');
@@ -251,8 +239,8 @@ app.post('/api/verify-engagement', async (req, res) => {
     });
 
     const tweetsData = await tweetsResponse.json();
-    const retweeted = tweetsData.data?.some((tweet: any) =>
-      tweet.referenced_tweets?.some((ref: any) => ref.type === 'retweeted' && ref.id === tweetId)
+    const retweeted = tweetsData.data?.some(tweet =>
+      tweet.referenced_tweets?.some(ref => ref.type === 'retweeted' && ref.id === tweetId)
     );
 
     if (retweeted) {

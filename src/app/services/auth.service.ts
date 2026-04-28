@@ -22,7 +22,7 @@ export interface User {
   providedIn: 'root',
 })
 export class AuthService {
-  private currentUserSubject = new BehaviorSubject<User | null>(null);
+  private currentUserSubject = new BehaviorSubject<User | null | undefined>(undefined);
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(public supabaseService: SupabaseService, private router: Router) {
@@ -31,27 +31,39 @@ export class AuthService {
       this.supabaseService.currentUser$,
       this.supabaseService.currentProfile$
     ]).subscribe(([supabaseUser, profile]) => {
-      if (supabaseUser) {
-        // Extract Twitter info if it exists
-        const twitterIdentity = supabaseUser.identities?.find(id => id.provider === 'twitter' || id.provider === 'x');
-        const twitterHandle = twitterIdentity?.identity_data?.['preferred_username'] || supabaseUser.user_metadata?.['user_name'];
-        const twitterId = twitterIdentity?.id || supabaseUser.user_metadata?.['provider_id'];
+      // 1. Still loading initial session
+      if (supabaseUser === undefined) {
+        return;
+      }
 
-        const user: User = {
-          id: supabaseUser.id,
-          email: supabaseUser.email || '',
-          role: profile?.role || 'user',
-          is_approved: profile?.is_approved || false,
-          verified: profile?.is_approved || false,
-          twitterHandle: twitterHandle,
-          twitterId: twitterId
-        };
-        this.currentUserSubject.next(user);
-        localStorage.setItem('currentUser', JSON.stringify(user));
-      } else {
+      // 2. Definitely unauthenticated
+      if (supabaseUser === null) {
         this.currentUserSubject.next(null);
         localStorage.removeItem('currentUser');
+        return;
       }
+
+      // 3. Authenticated - Wait for profile to avoid role-flicker or premature guard rejection
+      if (profile === undefined) {
+        return;
+      }
+
+      // 4. Authenticated & Profile Loaded
+      const twitterIdentity = supabaseUser.identities?.find(id => id.provider === 'twitter' || id.provider === 'x');
+      const twitterHandle = twitterIdentity?.identity_data?.['preferred_username'] || supabaseUser.user_metadata?.['user_name'];
+      const twitterId = twitterIdentity?.id || supabaseUser.user_metadata?.['provider_id'];
+
+      const user: User = {
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        role: profile?.role || 'user',
+        is_approved: profile?.is_approved || false,
+        verified: profile?.is_approved || false,
+        twitterHandle: twitterHandle,
+        twitterId: twitterId
+      };
+      this.currentUserSubject.next(user);
+      localStorage.setItem('currentUser', JSON.stringify(user));
     });
   }
 
@@ -59,7 +71,7 @@ export class AuthService {
     return !!this.currentUserSubject.value;
   }
 
-  getCurrentUser(): User | null {
+  getCurrentUser(): User | null | undefined {
     return this.currentUserSubject.value;
   }
 

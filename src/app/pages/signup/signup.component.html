@@ -5,7 +5,7 @@
     <div class="text-center">
       <h2 class="text-3xl font-extrabold text-gray-900">Create your account</h2>
       <p class="mt-2 text-sm text-gray-600">
-        Verify your Twitter account (1k+ followers required) and sign-up to start earning.
+        Verify your Twitter account and sign up to start earning.
       </p>
     </div>
 
@@ -39,7 +39,7 @@
           <p class="text-sm font-semibold text-green-900">
             &#64;<span [innerText]="twitterHandle"></span> verified with <span [innerText]="followersCount"></span> followers
           </p>
-          <p class="text-xs text-green-700">You meet the 1,000 followers requirement</p>
+          <p class="text-xs text-green-700">Twitter account verified</p>
         </div>
       </div>
     </div>
@@ -69,7 +69,7 @@
               <span *ngIf="!loading">Connect with Twitter</span>
             </button>
             <p class="mt-2 text-xs text-gray-500">
-              Login with Twitter to verify your account (1k+ followers required)
+              Login with Twitter to verify your account
             </p>
           </div>
           
@@ -83,7 +83,7 @@
                   &#64;<span [innerText]="twitterHandle"></span> connected
                 </p>
                 <p class="text-xs text-green-700">
-                  {{ followersCount }} followers • Meets 1k requirement
+                  {{ followersCount }} followers • Verified
                 </p>
               </div>
             </div>
@@ -101,7 +101,7 @@
             type="email"
             autocomplete="email"
             formControlName="email"
-            class="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            class="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-gray-500 focus:border-gray-900 sm:text-sm"
             placeholder="your@email.com"
           />
           <p class="mt-1 text-xs text-gray-500">
@@ -122,7 +122,7 @@
               [type]="showPassword ? 'text' : 'password'"
               autocomplete="new-password"
               formControlName="password"
-              class="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              class="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-gray-500 focus:border-gray-900 sm:text-sm"
               placeholder="Create a strong password"
             />
             <button
@@ -170,7 +170,7 @@
         <button
           type="submit"
           [disabled]="!signupForm.valid || !twitterVerified || loading"
-          class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-gray-900 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           <span *ngIf="loading">Creating account...</span>
           <span *ngIf="!loading">Create Account</span>
@@ -182,7 +182,7 @@
           Already have an account?
           <a
             routerLink="/login"
-            class="font-medium text-blue-600 hover:text-blue-500"
+            class="font-medium text-gray-900 hover:text-gray-600"
             >Sign in here</a
           >
         </p>

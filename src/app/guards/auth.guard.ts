@@ -24,7 +24,7 @@ export class AuthGuard implements CanActivate {
   ): Observable<boolean> {
     return this.authService.currentUser$.pipe(
       // Wait until the session is initialized (currentUser is not undefined)
-      filter((user) => user !== undefined),
+      filter((user): user is User | null => user !== undefined),
       take(1),
       switchMap(async (user: User | null) => {
         if (!user) {
