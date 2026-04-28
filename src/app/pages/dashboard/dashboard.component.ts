@@ -49,6 +49,54 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    // Check if user returned from Twitter OAuth (reconnect flow)
+    const params = new URLSearchParams(window.location.search);
+    const twitterSuccess = params.get('success') === 'true';
+    const error = params.get('error');
+
+    if (twitterSuccess) {
+      const accessToken = params.get('access_token');
+      const twitterUserId = params.get('twitter_user_id');
+      const twitterHandle = params.get('twitter_handle');
+      const followersCount = params.get('followers_count');
+      const isVerified = params.get('is_verified') === 'true';
+
+      if (accessToken) {
+        localStorage.setItem('twitter_access_token', accessToken);
+        console.log('[Dashboard] Twitter access token saved');
+      }
+      if (twitterUserId) {
+        localStorage.setItem('twitter_user_id', twitterUserId);
+        console.log('[Dashboard] Twitter user ID saved');
+      }
+
+      // Update profile with Twitter data
+      this.authService.currentUser$.pipe(take(1)).subscribe(async (currentUser: any) => {
+        if (currentUser) {
+          try {
+            await this.supabase.updateProfile(currentUser.id, {
+              twitter_handle: twitterHandle || undefined,
+              twitter_followers: parseInt(followersCount || '0'),
+              is_verified: isVerified
+            });
+            console.log('[Dashboard] Profile updated with Twitter data');
+            // Reload to get updated data
+            window.location.reload();
+          } catch (err) {
+            console.error('[Dashboard] Failed to update profile:', err);
+          }
+        }
+      });
+
+      // Clear the query params
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    if (error) {
+      alert('Twitter connection failed: ' + error);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     this.loadTasks();
     this.authService.currentUser$.subscribe(currentUser => {
       this.hasTwitterSession = !!localStorage.getItem('twitter_access_token');
