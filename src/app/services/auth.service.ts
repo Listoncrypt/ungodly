@@ -86,11 +86,7 @@ export class AuthService {
   }
 
   signup(email: string, password: string): Observable<User> {
-    return from(this.supabaseService.adminSignup(email, password)).pipe(
-      switchMap(response => {
-        // After admin creation, sign them in normally
-        return from(this.supabaseService.client.auth.signInWithPassword({ email, password }));
-      }),
+    return from(this.supabaseService.client.auth.signUp({ email, password })).pipe(
       map(response => {
         if (response.error) throw response.error;
         return { id: response.data.user?.id || '', email: response.data.user?.email || '' } as User;

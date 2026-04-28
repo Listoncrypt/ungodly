@@ -379,20 +379,5 @@ export class SupabaseService {
     if (error) throw error;
   }
 
-  async confirmUserEmail(email: string) {
-    const { data, error } = await this.supabase.functions.invoke('confirm-email', {
-      body: { email }
-    });
-    if (error) throw error;
-    return data;
-  }
-
-  async adminSignup(email: string, password: string) {
-    const { data, error } = await this.supabase.functions.invoke('admin-signup', {
-      body: { email, password }
-    });
-    if (error) throw error;
-    return data;
-  }
 }
 
