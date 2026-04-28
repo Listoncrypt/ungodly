@@ -82,6 +82,11 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       this.authService.currentUser$.pipe(take(1)).subscribe(async (currentUser: any) => {
         if (currentUser) {
           try {
+            console.log('[Dashboard] Updating profile for user:', currentUser.id, 'with data:', {
+              twitter_handle: twitterHandle,
+              twitter_followers: parseInt(followersCount || '0'),
+              is_verified: isVerified
+            });
             await this.supabase.updateProfile(currentUser.id, {
               twitter_handle: twitterHandle || undefined,
               twitter_followers: parseInt(followersCount || '0'),
@@ -92,9 +97,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
             // Clear query params and reload to get updated data
             window.history.replaceState({}, document.title, window.location.pathname);
             setTimeout(() => window.location.reload(), 500);
-          } catch (err) {
+          } catch (err: any) {
             console.error('[Dashboard] Failed to update profile:', err);
-            alert('Twitter connected but profile update failed. Please try again.');
+            console.error('[Dashboard] Error details:', JSON.stringify(err));
+            alert('Twitter connected but profile update failed: ' + (err.message || 'Unknown error'));
             window.history.replaceState({}, document.title, window.location.pathname);
           }
         } else {
