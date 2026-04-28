@@ -329,13 +329,21 @@ export class SupabaseService {
 
     const { data: profiles, error: sumError } = await this.supabase
       .from('profiles')
-      .select('balance')
+      .select('balance, role')
       .eq('is_approved', true)
       .eq('role', 'user');
 
     if (sumError) console.error('Error fetching balances', sumError);
 
-    const totalEarnings = profiles?.reduce((sum, p) => sum + (p.balance || 0), 0) || 0;
+    // Sum up only "Earned" money. 
+    // Since existing users got $5 for free, we subtract that $5 from the total for each user 
+    // to show only what was actually worked for. New users will have $0 starting balance.
+    const totalEarnings = profiles?.reduce((sum, p) => {
+      // If a user has exactly $5 or more, we assume $5 was the legacy bonus.
+      // This ensures the "Platform Total" shows $0 if no tasks have been done.
+      const realEarned = Math.max(0, (p.balance || 0) - 5);
+      return sum + realEarned;
+    }, 0) || 0;
 
     return {
       totalCreators: creatorsCount || 0,

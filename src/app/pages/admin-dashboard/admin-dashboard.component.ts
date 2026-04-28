@@ -117,6 +117,19 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     }
   }
 
+  async clearLegacyBonuses() {
+    if (confirm('Are you sure you want to deduct $5 from all user balances? This will reconcile legacy bonuses.')) {
+      try {
+        await this.supabase.fixLegacyBalances();
+        alert('Legacy bonuses cleared successfully!');
+        this.loadRegisteredUsers();
+      } catch (error) {
+        console.error('Failed to clear legacy bonuses:', error);
+        alert('Failed to clear legacy bonuses.');
+      }
+    }
+  }
+
   async approve(userId: string) {
     try {
       await this.supabase.approveUser(userId);
