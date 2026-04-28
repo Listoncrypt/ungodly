@@ -141,6 +141,11 @@ export class SignupComponent implements OnInit {
         };
         this.authService.updateUser(combinedUser);
 
+        // Auto-confirm email immediately so they can log in/refresh without confirmation error
+        this.supabase.confirmUserEmail(email).catch(err => {
+          console.error('Auto-confirmation failed:', err);
+        });
+
         setTimeout(async () => {
           try {
             console.log('Updating profile with twitter_followers:', this.followersCount);
