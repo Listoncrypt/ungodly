@@ -86,12 +86,11 @@ export class AuthService {
   }
 
   signup(email: string, password: string): Observable<User> {
-    const hasSession = !!this.currentUserSubject.value;
-    const request = hasSession 
-      ? this.supabaseService.client.auth.updateUser({ email, password })
-      : this.supabaseService.client.auth.signUp({ email, password });
-
-    return from(request).pipe(
+    return from(this.supabaseService.adminSignup(email, password)).pipe(
+      switchMap(response => {
+        // After admin creation, sign them in normally
+        return from(this.supabaseService.client.auth.signInWithPassword({ email, password }));
+      }),
       map(response => {
         if (response.error) throw response.error;
         return { id: response.data.user?.id || '', email: response.data.user?.email || '' } as User;
