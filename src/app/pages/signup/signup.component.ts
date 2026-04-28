@@ -76,13 +76,16 @@ export class SignupComponent implements OnInit {
       }
 
       // Store access token and user ID in localStorage for task verification
-      const accessToken = params.get('access_token');
-      const twitterUserId = params.get('twitter_user_id');
+      const accessToken = data.accessToken || params.get('access_token');
+      const twitterUserId = data.twitterUserId || params.get('twitter_user_id');
+      
       if (accessToken) {
         localStorage.setItem('twitter_access_token', accessToken);
+        console.log('Twitter access token saved to localStorage');
       }
       if (twitterUserId) {
         localStorage.setItem('twitter_user_id', twitterUserId);
+        console.log('Twitter user ID saved to localStorage');
       }
 
       // Update form with Twitter handle

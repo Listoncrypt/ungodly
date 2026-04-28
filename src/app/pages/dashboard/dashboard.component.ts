@@ -132,6 +132,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  verifyingTaskId: string | null = null;
+
   async loadTasks() {
     try {
       this.engagementTasks = await this.supabase.getTasks();
@@ -140,51 +142,52 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  engageOnX(task: EngagementTask) {
+  engageOnX(task: PlatformTask) {
     console.log('Opening X (Twitter)...', task.post_link);
     window.open(task.post_link || 'https://x.com', '_blank');
+    this.verifyingTaskId = task.id;
+  }
 
+  async verifyTask(task: PlatformTask) {
     const tweetId = this.extractTweetId(task.post_link || '');
-
     if (!tweetId) {
       alert('Invalid task link. Cannot verify engagement.');
       return;
     }
 
-    setTimeout(async () => {
-      console.log('Verifying engagement for tweet:', tweetId);
+    console.log('Verifying engagement for tweet:', tweetId);
 
-      const isVerified = await this.verifyEngagement(tweetId);
+    const isVerified = await this.verifyEngagement(tweetId);
 
-      if (!isVerified) {
-        alert('Engagement verification failed. Please make sure you liked or retweeted the post to earn rewards.');
-        return;
-      }
+    if (!isVerified) {
+      alert('Engagement verification failed. Please make sure you liked or retweeted the post to earn rewards.');
+      return;
+    }
 
-      this.tasksComplete++;
+    this.tasksComplete++;
 
-      let finalReward = task.reward;
-      if (this.verified) {
-        finalReward += finalReward * 0.10;
-      }
+    let finalReward = task.reward;
+    if (this.verified) {
+      finalReward += finalReward * 0.10;
+    }
 
-      this.earnings += finalReward;
-      this.balance += finalReward;
+    this.earnings += finalReward;
+    this.balance += finalReward;
 
-      this.authService.currentUser$.pipe(take(1)).subscribe(async (currentUser: User | null | undefined) => {
-        if (currentUser) {
-          try {
-            await this.supabase.updateProfile(currentUser.id, { balance: this.balance });
-          } catch (error) {
-            console.error('Failed to update balance:', error);
-          }
+    this.authService.currentUser$.pipe(take(1)).subscribe(async (currentUser: any) => {
+      if (currentUser) {
+        try {
+          await this.supabase.updateProfile(currentUser.id, { balance: this.balance });
+        } catch (error) {
+          console.error('Failed to update balance:', error);
         }
-      });
+      }
+    });
 
-      this.engagementTasks = this.engagementTasks.filter(t => t.id !== task.id);
+    this.engagementTasks = this.engagementTasks.filter(t => t.id !== task.id);
+    this.verifyingTaskId = null;
 
-      alert(`Task validated! You earned $${finalReward.toFixed(2)}`);
-    }, 5000);
+    alert(`Task validated! You earned $${finalReward.toFixed(2)}`);
   }
 
   async submitWithdrawal() {
