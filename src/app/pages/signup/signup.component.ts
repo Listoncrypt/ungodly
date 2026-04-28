@@ -64,6 +64,15 @@ export class SignupComponent implements OnInit {
           followers: this.followersCount,
           verified: this.isTwitterVerified
         });
+
+        if (data.accessToken) {
+          localStorage.setItem('twitter_access_token', data.accessToken);
+          console.log('Twitter access token saved to localStorage');
+        }
+        if (data.twitterUserId) {
+          localStorage.setItem('twitter_user_id', data.twitterUserId);
+          console.log('Twitter user ID saved to localStorage');
+        }
       } else {
         // Fallback to query params if sessionStorage is empty
         this.twitterHandle = params.get('twitter_handle') || '';
@@ -73,19 +82,15 @@ export class SignupComponent implements OnInit {
           handle: this.twitterHandle,
           followers: this.followersCount
         });
-      }
 
-      // Store access token and user ID in localStorage for task verification
-      const accessToken = data.accessToken || params.get('access_token');
-      const twitterUserId = data.twitterUserId || params.get('twitter_user_id');
-      
-      if (accessToken) {
-        localStorage.setItem('twitter_access_token', accessToken);
-        console.log('Twitter access token saved to localStorage');
-      }
-      if (twitterUserId) {
-        localStorage.setItem('twitter_user_id', twitterUserId);
-        console.log('Twitter user ID saved to localStorage');
+        const accessToken = params.get('access_token');
+        const twitterUserId = params.get('twitter_user_id');
+        if (accessToken) {
+          localStorage.setItem('twitter_access_token', accessToken);
+        }
+        if (twitterUserId) {
+          localStorage.setItem('twitter_user_id', twitterUserId);
+        }
       }
 
       // Update form with Twitter handle

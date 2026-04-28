@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService, User } from '../../services/auth.service';
-import { SupabaseService } from '../../services/supabase.service';
+import { SupabaseService, PlatformTask } from '../../services/supabase.service';
 import { environment } from '../../../environments/environment';
 import { take } from 'rxjs/operators';
 
