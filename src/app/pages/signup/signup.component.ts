@@ -144,8 +144,8 @@ export class SignupComponent implements OnInit {
           twitterId: this.twitterHandle,
           verified: this.isTwitterVerified,
           followersCount: this.followersCount,
-          boost: this.isTwitterVerified ? 10 : 0,
-          balance: 5
+          boost: this.followersCount >= 1000 ? 10 : 0,
+          balance: 0
         };
         this.authService.updateUser(combinedUser);
 

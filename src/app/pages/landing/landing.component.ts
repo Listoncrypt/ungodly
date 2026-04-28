@@ -13,18 +13,16 @@ import { AuthService } from '../../services/auth.service';
 })
 export class LandingComponent implements AfterViewInit, OnDestroy, OnInit {
   isMobileMenuOpen = false;
-  isBookMeetModalOpen = false;
   isAdmin = false;
   isLoggedIn = false;
-  
+  isBookMeetModalOpen = false;
+
   bookMeetForm = {
     name: '',
     email: '',
     project: '',
     details: ''
   };
-
-  private _observer: IntersectionObserver | null = null;
 
   constructor(private router: Router, private authService: AuthService) {}
 
@@ -35,28 +33,16 @@ export class LandingComponent implements AfterViewInit, OnDestroy, OnInit {
     });
   }
 
+  ngAfterViewInit() {}
+
+  ngOnDestroy() {}
+
   toggleMobileMenu() {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
   }
 
   closeMobileMenu() {
     this.isMobileMenuOpen = false;
-  }
-
-  openBookMeetModal() {
-    this.isBookMeetModalOpen = true;
-    this.closeMobileMenu();
-  }
-
-  closeBookMeetModal() {
-    this.isBookMeetModalOpen = false;
-  }
-
-  submitBookMeet() {
-    console.log('Booking request submitted', this.bookMeetForm);
-    alert('Your meeting request has been received! Our team will contact you soon.');
-    this.closeBookMeetModal();
-    this.bookMeetForm = { name: '', email: '', project: '', details: '' };
   }
 
   scrollToSection(sectionId: string) {
@@ -74,26 +60,18 @@ export class LandingComponent implements AfterViewInit, OnDestroy, OnInit {
     window.open('https://t.me/+3rl2v5b7H-9mNDFk', '_blank');
   }
 
-  ngAfterViewInit(): void {
-    const options = { root: null, rootMargin: '0px', threshold: 0.12 };
-    this._observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        const el = entry.target as HTMLElement;
-        if (entry.isIntersecting) {
-          el.classList.add('is-visible');
-        }
-      });
-    }, options);
-
-    document.querySelectorAll('.reveal').forEach((el) => {
-      this._observer?.observe(el);
-    });
+  openBookMeetModal() {
+    this.isBookMeetModalOpen = true;
   }
 
-  ngOnDestroy(): void {
-    if (this._observer) {
-      this._observer.disconnect();
-      this._observer = null;
-    }
+  closeBookMeetModal() {
+    this.isBookMeetModalOpen = false;
   }
-}
+
+  async submitBookMeet() {
+    console.log('Meeting request submitted:', this.bookMeetForm);
+    alert('Thank you! Your meeting request has been submitted. Our team will contact you soon.');
+    this.closeBookMeetModal();
+    this.bookMeetForm = { name: '', email: '', project: '', details: '' };
+  }
+}

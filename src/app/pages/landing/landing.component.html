@@ -11,9 +11,9 @@
           class="inline-flex items-center gap-2 sm:gap-3 flex-shrink-0"
         >
           <img
-            src="assets/e5b0506d-df2e-4736-9427-8480edc912a1.jpg"
+            src="assets/ee41a994-c564-489f-a071-3fae7d4bf7bb.png"
             alt="UNGODLY ACHV"
-            class="h-12 w-auto object-contain border-0"
+            class="h-12 w-auto object-contain"
           />
         </a>
 
@@ -53,18 +53,9 @@
 
         <!-- CTA Button & Mobile Menu -->
         <div class="flex items-center gap-4">
-          <a
-            routerLink="/login"
-            class="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-900 hover:text-gray-600 transition-colors"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-            </svg>
-            Login
-          </a>
           <button
             (click)="onBecomeAgent()"
-            class="hidden sm:inline-flex px-6 py-2 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-all cursor-pointer touch-manipulation btn-premium"
+            class="hidden sm:inline-flex px-6 py-2 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
           >
             Become An Agent
           </button>
@@ -116,26 +107,12 @@
           Become a Partner
         </button>
         <button
-          (click)="openBookMeetModal()"
+          (click)="openBookMeetModal(); closeMobileMenu()"
           class="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
         >
           Book a Meet
         </button>
-        <!-- <a
-          routerLink="/login"
-          (click)="closeMobileMenu()"
-          class="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
-        >
-          Login
-        </a>
-        <a
-          routerLink="/signup"
-          (click)="closeMobileMenu()"
-          class="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
-        >
-          Sign up
-        </a> -->
-        <a
+         <a
           *ngIf="isAdmin"
           routerLink="/admin-dashboard"
           (click)="closeMobileMenu()"
@@ -164,7 +141,7 @@
         </a>
         <button
           (click)="onBecomeAgent(); closeMobileMenu()"
-          class="w-full mt-4 px-6 py-2 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-all cursor-pointer touch-manipulation btn-premium"
+          class="w-full mt-4 px-6 py-2 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
         >
           Become An Agent
         </button>
@@ -173,29 +150,30 @@
   </header>
 
   <!-- Hero Section -->
-  <section class="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
-    <div class="max-w-4xl mx-auto text-center reveal">
+  <section class="relative py-20 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto text-center">
       <h1
-        class="text-5xl sm:text-6xl lg:text-7xl font-black text-gray-900 mb-8 leading-[1.1] tracking-tight stagger-item"
+        class="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900 mb-6 leading-tight"
       >
-        Introducing<br /><span class="text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-500">UNGODLY ACHV</span>
+        Introducing<br />UNGODLY ACHV
       </h1>
       <p
-        class="text-xl sm:text-2xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed stagger-item"
+        class="text-lg sm:text-xl text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed"
       >
-        The smartest way for Web3 projects to grow organically on X. 
-        Reach real audiences in a completely natural, organic way.
+        The smartest way for Web3 projects to grow organically on X. <br />
+        Tired of paying for fake impressions, bot followers, and engagement that brings no real users or volume. <br />
+        Ungodly ACHV is the first fully automated platform built exclusively for Web3 that helps your Project reach and engage real audiences on X in a completely natural, organic way.
       </p>
-      <div class="flex flex-col sm:flex-row gap-5 justify-center stagger-item">
-        <button
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <!-- <button
           (click)="onBecomeAgent()"
-          class="px-10 py-4 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all text-lg btn-premium shadow-xl hover:shadow-2xl flex items-center justify-center gap-3"
+          class="px-8 py-3 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors text-lg"
         >
-          Become An Agent
-        </button>
+          Get Started
+        </button> -->
         <button
           (click)="joinTelegram()"
-          class="px-10 py-4 bg-white text-gray-900 font-bold rounded-xl border-2 border-gray-200 hover:border-gray-900 transition-all text-lg flex items-center justify-center gap-3"
+          class="px-8 py-3 bg-white text-gray-900 font-semibold rounded-lg border-2 border-gray-300 hover:bg-gray-50 transition-colors text-lg"
         >
           View Results
         </button>
@@ -204,56 +182,44 @@
   </section>
 
   <!-- Features Section -->
-  <section id="features" class="py-24 px-4 sm:px-6 lg:px-8 bg-white reveal">
+  <section id="features" class="py-20 px-4 sm:px-6 lg:px-8 bg-white">
     <div class="max-w-6xl mx-auto">
       <h2
-        class="text-4xl font-black text-gray-900 mb-16 text-center section-title"
+        class="text-3xl sm:text-4xl font-black text-gray-900 mb-12 text-center"
       >
         Our Services
       </h2>
       <div class="grid md:grid-cols-3 gap-8">
         <!-- Feature 1 -->
         <div
-          class="p-10 border border-gray-100 rounded-2xl bg-gray-50/50 hover:bg-white hover:border-gray-200 transition-all hover-lift stagger-item"
+          class="p-8 border border-gray-200 rounded-lg hover:shadow-lg transition-shadow"
         >
-          <div class="w-12 h-12 bg-black text-white rounded-xl flex items-center justify-center mb-6 shadow-lg">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-            </svg>
-          </div>
-          <h3 class="text-2xl font-bold text-gray-900 mb-4">Advisory</h3>
-          <p class="text-gray-600 leading-relaxed">
-            Strategic TGE planning and launch campaigns tailored for Web3 growth.
+          <h3 class="text-xl font-bold text-gray-900 mb-3">Advisory</h3>
+          <p class="text-gray-600">
+            TGE and launch campaigns
           </p>
         </div>
 
         <!-- Feature 2 -->
         <div
-          class="p-10 border border-gray-100 rounded-2xl bg-gray-50/50 hover:bg-white hover:border-gray-200 transition-all hover-lift stagger-item"
+          class="p-8 border border-gray-200 rounded-lg hover:shadow-lg transition-shadow"
         >
-          <div class="w-12 h-12 bg-black text-white rounded-xl flex items-center justify-center mb-6 shadow-lg">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-          </div>
-          <h3 class="text-2xl font-bold text-gray-900 mb-4">AOE Update</h3>
-          <p class="text-gray-600 leading-relaxed">
-            Auto Organic Engagement powered by advanced algorithms to drive real volume.
+          <h3 class="text-xl font-bold text-gray-900 mb-3">AOE Update</h3>
+          <p class="text-gray-600">
+            Auto Organic Engagement powered by advanced algorithms. <br />
+            Our groundbreaking technology automates authentic engagement across
+            multiple channels for growth.
           </p>
         </div>
 
         <!-- Feature 3 -->
         <div
-          class="p-10 border border-gray-100 rounded-2xl bg-gray-50/50 hover:bg-white hover:border-gray-200 transition-all hover-lift stagger-item"
+          class="p-8 border border-gray-200 rounded-lg hover:shadow-lg transition-shadow"
         >
-          <div class="w-12 h-12 bg-black text-white rounded-xl flex items-center justify-center mb-6 shadow-lg">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
-            </svg>
-          </div>
-          <h3 class="text-2xl font-bold text-gray-900 mb-4">Global Reach</h3>
-          <p class="text-gray-600 leading-relaxed">
-            Visibility across APAC, North America, MENA, and Europe for true expansion.
+          <h3 class="text-xl font-bold text-gray-900 mb-3">Reach</h3>
+          <p class="text-gray-600">
+            When giving protocols visibility, we don't just give real users impressions. <br />
+            We let every part of CT see you (APAC, North America, MENA, Europe and the likes).
           </p>
         </div>
       </div>
@@ -261,21 +227,20 @@
   </section>
 
   <!-- Become A Partner Section -->
-  <section id="partners" class="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 reveal">
+  <section id="partners" class="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
     <div class="max-w-4xl mx-auto text-center">
       <h2 class="text-3xl sm:text-4xl font-black text-gray-900 mb-6">
         Become a Partner
       </h2>
       <p class="text-lg text-gray-600 mb-8">
-        Partner with UNGODLY ACHV to build visibility for your protocols and
-        drive volume without having to break a sweat. <br />
-        Become one of the partners that get to experience our AOE platform.
+        Partner with UNGODLY ACHV to tap into authentic, organic growth for your
+        Web3 project. Gain access to our AOE network, co-marketing
+        opportunities, and priority support.
       </p>
       <div class="flex items-center justify-center gap-4">
         <a
-          href="https://t.me/Iamhimtrueraver"
-          target="_blank"
-          class="inline-block px-6 py-3 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors btn-premium"
+          href="https://t.me/Ungodlyachvportfolio "
+          class="inline-block px-6 py-3 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors"
         >
           Contact Team
         </a>
@@ -290,39 +255,38 @@
   </section>
 
   <!-- Partners Section -->
-  <section class="py-24 px-4 sm:px-6 lg:px-8 bg-white reveal">
-    <div class="max-w-6xl mx-auto text-center">
+  <section class="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+    <div class="max-w-6xl mx-auto">
       <h2
-        class="text-4xl font-black text-gray-900 mb-16 section-title"
+        class="text-3xl sm:text-4xl font-black text-gray-900 mb-12 text-center"
       >
         Our Partners
       </h2>
-      <div class="flex flex-wrap items-center justify-center gap-16 sm:gap-24">
+      <div class="flex flex-wrap items-center justify-center gap-12">
         <!-- Perpgame Partner -->
-        <div class="flex flex-col items-center justify-center group cursor-pointer stagger-item">
-          <div class="relative w-24 h-24 sm:w-32 sm:h-32 mb-6">
-            <div class="absolute inset-0 bg-gray-900 rounded-full scale-0 group-hover:scale-100 transition-transform duration-500 opacity-5"></div>
-            <img
-              src="assets/perpgame.png"
-              alt="Perpgame"
-              class="absolute inset-0 w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-500"
-            />
-          </div>
-          <span class="text-xl font-black text-gray-900 group-hover:tracking-wider transition-all duration-300">PERPGAME</span>
+        <div class="flex flex-col items-center justify-center group cursor-pointer">
+          <img
+            src="assets/perpgame.png"
+            alt="Perpgame"
+            class="h-16 w-auto object-contain group-hover:scale-110 transition-transform duration-300 mb-3"
+          />
+          <span class="text-lg font-bold text-gray-800">Perpgame</span>
         </div>
         <!-- Add more partners as needed -->
       </div>
     </div>
   </section>
 
+
+
   <!-- Footer -->
-  <footer class="bg-black text-gray-300 py-12 px-4 sm:px-6 lg:px-8">
+  <footer class="bg-gray-800 text-gray-300 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-6xl mx-auto">
       <div class="grid md:grid-cols-4 gap-8 mb-8">
         <div>
           <h3 class="font-bold text-white mb-4">UNGODLY ACHV</h3>
           <p class="text-sm">
-            Ct's First AOE platform for brands personal visibility and growth
+            Ct's First AOE platform for brands, personal visibility and growth
             hacking.
           </p>
           <div class="flex gap-4 mt-6">
@@ -354,7 +318,7 @@
 
   <!-- Book a Meet Modal -->
   <div *ngIf="isBookMeetModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in-up">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
         <h3 class="text-xl font-bold text-gray-900">Book a Meet</h3>
         <button (click)="closeBookMeetModal()" class="text-gray-400 hover:text-gray-700 transition">
@@ -394,7 +358,7 @@
             Cancel
           </button>
           <button type="submit" 
-                  class="px-5 py-2 bg-black text-white font-medium hover:bg-gray-800 rounded-lg transition shadow-lg btn-premium">
+                  class="px-5 py-2 bg-black text-white font-medium hover:bg-gray-800 rounded-lg transition shadow-lg">
             Submit Request
           </button>
         </div>
