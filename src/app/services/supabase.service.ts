@@ -17,6 +17,8 @@ export interface Profile {
   twitter_refresh_token?: string;
   is_verified?: boolean;
   balance?: number;
+  total_earned?: number;
+  tasks_completed?: number;
   created_at?: string;
 }
 

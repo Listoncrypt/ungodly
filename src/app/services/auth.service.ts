@@ -16,6 +16,8 @@ export interface User {
   role?: string;
   is_approved?: boolean;
   followersCount?: number;
+  total_earned?: number;
+  tasks_completed?: number;
 }
 
 @Injectable({
