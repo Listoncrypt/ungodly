@@ -40,25 +40,16 @@ import { Subscription } from 'rxjs';
           </a>
           <p class="text-[12px] text-gray-500 font-bold mt-4 px-2">Join to complete your signup and get notified when your application is accepted.</p>
 
-          <div class="grid grid-cols-2 gap-3 mt-8">
-            <button
-              (click)="refreshStatus()"
-              class="flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-900 font-bold py-3.5 px-4 rounded-xl border border-gray-200 transition-all active:scale-[0.98]"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Status
-            </button>
+          <div class="mt-8">
             <a
               href="https://t.me/Iamhimtrueraver"
               target="_blank"
-              class="flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-900 font-bold py-3.5 px-4 rounded-xl border border-gray-200 transition-all active:scale-[0.98]"
+              class="flex items-center justify-center gap-3 w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg hover:shadow-gray-200 active:scale-[0.98]"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
-              Contact
+              Contact Team
             </a>
           </div>
 
