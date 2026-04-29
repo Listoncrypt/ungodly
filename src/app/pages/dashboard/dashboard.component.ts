@@ -134,8 +134,13 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // Load tasks and filter them
         try {
-          // 1. Get completed task IDs
-          const completedIds = await this.supabase.getCompletedTasks(user.id);
+          // 1. Get completed task IDs (Gracefully handle missing table)
+          let completedIds: string[] = [];
+          try {
+            completedIds = await this.supabase.getCompletedTasks(user.id);
+          } catch (e) {
+            console.warn('[Dashboard] user_tasks table might be missing. Skipping filter.', e);
+          }
           this.completedTaskIds = new Set(completedIds);
 
           // 2. Load all tasks
@@ -144,12 +149,17 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           // 3. Filter: Only show tasks the user HAS NOT done yet
           this.engagementTasks = tasks.filter(t => !this.completedTaskIds.has(t.id));
 
-          // 4. Load full details for performed tasks tab
-          this.performedTasks = await this.supabase.getFullCompletedTasks(user.id);
+          // 4. Load full details for performed tasks tab (Gracefully handle missing table)
+          try {
+            this.performedTasks = await this.supabase.getFullCompletedTasks(user.id);
+          } catch (e) {
+            console.warn('[Dashboard] Could not load performed tasks details.', e);
+            this.performedTasks = [];
+          }
 
           console.log(`Loaded ${this.engagementTasks.length} available and ${this.performedTasks.length} performed tasks`);
         } catch (err) {
-          console.error('Error loading tasks:', err);
+          console.error('Critical error loading tasks:', err);
         }
 
         // Load user withdrawals
