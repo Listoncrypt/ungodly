@@ -12,11 +12,8 @@ export interface Profile {
   is_approved: boolean;
   twitter_followers?: number;
   twitter_handle?: string;
-  twitter_user_id?: string;
-  twitter_access_token?: string;
-  twitter_refresh_token?: string;
   balance?: number;
-  is_verified?: boolean;
+  created_at?: string;
 }
 
 export interface PlatformTask {

@@ -53,14 +53,18 @@ export class AuthService {
       const twitterHandle = twitterIdentity?.identity_data?.['preferred_username'] || supabaseUser.user_metadata?.['user_name'];
       const twitterId = twitterIdentity?.id || supabaseUser.user_metadata?.['provider_id'];
 
+      const localVerified = localStorage.getItem('is_twitter_verified') === 'true';
+      const localTwitterHandle = localStorage.getItem('twitter_handle');
+      const localTwitterId = localStorage.getItem('twitter_user_id');
+
       const user: User = {
         id: supabaseUser.id,
         email: supabaseUser.email || '',
         role: profile?.role || 'user',
         is_approved: profile?.is_approved || false,
-        verified: profile?.is_verified || profile?.is_approved || false,
-        twitterHandle: profile?.twitter_handle || twitterHandle,
-        twitterId: profile?.twitter_user_id || twitterId,
+        verified: (profile as any)?.is_verified || profile?.is_approved || localVerified || false,
+        twitterHandle: profile?.twitter_handle || localTwitterHandle || twitterHandle,
+        twitterId: (profile as any)?.twitter_user_id || localTwitterId || twitterId,
         balance: profile?.balance || 0
       };
 
