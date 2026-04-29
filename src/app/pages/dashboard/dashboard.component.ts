@@ -327,32 +327,45 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // 2. Update user profile statistics
-    const currentUser = await this.authService.currentUser$.pipe(take(1)).toPromise();
-    if (!currentUser) throw new Error('User not authenticated');
+    try {
+      const currentUser = await this.authService.currentUser$.pipe(take(1)).toPromise();
+      if (!currentUser) throw new Error('User not authenticated');
 
-    // Record completion in user_tasks table to prevent duplicate claims
-    const recordResult = await this.supabase.recordTaskCompletion(currentUser.id, task.id, totalReward);
-    if (recordResult.alreadyDone) {
-      alert('You have already completed this task!');
+      console.log(`[Verify] Recording completion for user ${currentUser.id} and task ${task.id}`);
+
+      // Record completion in user_tasks table to prevent duplicate claims
+      const recordResult = await this.supabase.recordTaskCompletion(currentUser.id, task.id, totalReward);
+      
+      if (recordResult && recordResult.alreadyDone) {
+        alert('You have already completed this task!');
+        this.verifyingTaskId = null;
+        return;
+      }
+
+      console.log('[Verify] Completion recorded. Updating profile balance...');
+
+      const newBalance = (currentUser.balance || 0) + totalReward;
+      const newTotalEarned = (currentUser.total_earned || 0) + totalReward;
+      const newTasksCount = (currentUser.tasks_completed || 0) + 1;
+
+      await this.supabase.updateProfile(currentUser.id, {
+        balance: newBalance,
+        total_earned: newTotalEarned,
+        tasks_completed: newTasksCount
+      });
+
+      console.log(`[Verify] Profile updated: New Balance $${newBalance}`);
+
+      this.engagementTasks = this.engagementTasks.filter(t => t.id !== task.id);
+      this.completedTaskIds.add(task.id);
       this.verifyingTaskId = null;
-      return;
+
+      alert(`Task validated! You earned $${totalReward.toFixed(2)}`);
+    } catch (err: any) {
+      console.error('[Verify] Critical Error during reward awarding:', err);
+      alert(`Payment Error: Could not add reward to your balance. Error: ${err.message || 'Database connection error'}. Make sure the admin has run the latest SQL update!`);
+      this.verifyingTaskId = null;
     }
-
-    const newBalance = (currentUser.balance || 0) + totalReward;
-    const newTotalEarned = (currentUser.total_earned || 0) + totalReward;
-    const newTasksCount = (currentUser.tasks_completed || 0) + 1;
-
-    await this.supabase.updateProfile(currentUser.id, {
-      balance: newBalance,
-      total_earned: newTotalEarned,
-      tasks_completed: newTasksCount
-    });
-
-    this.engagementTasks = this.engagementTasks.filter(t => t.id !== task.id);
-    this.completedTaskIds.add(task.id);
-    this.verifyingTaskId = null;
-
-    alert(`Task validated! You earned $${totalReward.toFixed(2)}`);
   }
 
   async submitWithdrawal() {

@@ -86,7 +86,7 @@ export class LandingComponent implements AfterViewInit, OnDestroy, OnInit {
   }
 
   joinTelegram() {
-    window.open('https://t.me/+3rl2v5b7H-9mNDFk', '_blank');
+    window.open('https://t.me/Ungodlyachvportfolion', '_blank');
   }
 
   openBookMeetModal() {
