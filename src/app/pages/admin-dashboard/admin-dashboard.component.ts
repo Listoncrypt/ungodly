@@ -38,7 +38,10 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     postLink: '',
     reward: 0.5,
     boost: 0.05,
-    actions: ''
+    actions: '',
+    required_like: true,
+    required_comment: false,
+    required_repost: false
   };
 
   constructor(private supabase: SupabaseService, private router: Router) {}
@@ -172,10 +175,22 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   async createTask() {
-    if (!this.newTask.title || !this.newTask.actions) {
-      alert('Please fill out task title and actions.');
+    if (!this.newTask.title) {
+      alert('Please fill out the task title.');
       return;
     }
+
+    if (!this.newTask.required_like && !this.newTask.required_comment && !this.newTask.required_repost) {
+      alert('Please select at least one required action (Like, Comment, or Repost).');
+      return;
+    }
+
+    // Auto-generate actions text from checkboxes
+    const actionParts: string[] = [];
+    if (this.newTask.required_like) actionParts.push('Like');
+    if (this.newTask.required_comment) actionParts.push('Comment');
+    if (this.newTask.required_repost) actionParts.push('Repost');
+    const actionsText = actionParts.join(', ');
 
     let finalImage = this.newTask.image;
     if (!finalImage && this.newTask.postLink) {
@@ -187,10 +202,13 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     const taskData = {
       title: this.newTask.title,
       post_link: this.newTask.postLink,
-      actions: this.newTask.actions,
+      actions: actionsText,
       reward: this.newTask.reward,
       boost: this.newTask.boost,
-      image: finalImage
+      image: finalImage,
+      required_like: this.newTask.required_like,
+      required_comment: this.newTask.required_comment,
+      required_repost: this.newTask.required_repost
     };
 
     try {
@@ -203,6 +221,9 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
       this.newTask.actions = '';
       this.newTask.postLink = '';
       this.newTask.image = '';
+      this.newTask.required_like = true;
+      this.newTask.required_comment = false;
+      this.newTask.required_repost = false;
     } catch (error) {
       console.error('Failed to create task:', error);
       alert('Failed to publish task.');

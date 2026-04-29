@@ -177,8 +177,24 @@
             <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
           </div>
           <div class="p-4">
-            <h4 class="font-bold text-gray-900 text-sm mb-1 leading-tight">{{ task.title }}</h4>
-            <p class="text-xs text-gray-500 mb-4 line-clamp-2">{{ task.actions }}</p>
+            <h4 class="font-bold text-gray-900 text-sm mb-2 leading-tight">{{ task.title }}</h4>
+            <!-- Engagement type badges -->
+            <div class="flex flex-wrap items-center gap-1.5 mb-3">
+              <span *ngIf="task.required_like" class="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 text-red-700 text-[10px] font-bold rounded-full">
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                Like
+              </span>
+              <span *ngIf="task.required_comment" class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-full">
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Comment
+              </span>
+              <span *ngIf="task.required_repost" class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-[10px] font-bold rounded-full">
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                Repost
+              </span>
+              <!-- Fallback for old tasks -->
+              <span *ngIf="!task.required_like && !task.required_comment && !task.required_repost" class="text-xs text-gray-500">{{ task.actions }}</span>
+            </div>
             <div class="flex items-center justify-between mb-4">
               <div class="flex items-center gap-3">
                 <span class="inline-flex items-center gap-1 text-xs font-bold text-gray-900 bg-gray-100 px-2.5 py-1 rounded-md">
@@ -187,7 +203,10 @@
                   </svg>
                   ${{ task.reward.toFixed(2) }}
                 </span>
-                <span class="inline-flex items-center gap-1 text-xs font-bold text-green-700 bg-green-50 px-2.5 py-1 rounded-md">
+                <span *ngIf="isVerifiedAccount" class="inline-flex items-center gap-1 text-xs font-bold text-green-700 bg-green-50 px-2.5 py-1 rounded-md">
+                  2x Verified
+                </span>
+                <span *ngIf="!isVerifiedAccount && task.boost > 0" class="inline-flex items-center gap-1 text-xs font-bold text-green-700 bg-green-50 px-2.5 py-1 rounded-md">
                   +${{ task.boost.toFixed(2) }}
                 </span>
               </div>

@@ -31,7 +31,12 @@ const port = 3001;
 
 // CORS: Allow requests from your Vercel frontend
 app.use(cors({
-  origin: ['https://ungodly.vercel.app', 'http://localhost:4200', 'http://localhost:4300'],
+  origin: [
+    'https://ungodly-pi.vercel.app',
+    /\.vercel\.app$/,
+    'http://localhost:4200',
+    'http://localhost:4300'
+  ],
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true

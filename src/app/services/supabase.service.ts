@@ -28,6 +28,9 @@ export interface PlatformTask {
   actions: string;
   reward: number;
   boost: number;
+  required_like?: boolean;
+  required_comment?: boolean;
+  required_repost?: boolean;
   created_at?: string;
 }
 
