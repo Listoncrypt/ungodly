@@ -1,41 +1,40 @@
-<div class="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-  <div class="max-w-2xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-    <div class="flex items-center justify-center mb-10">
-      <!-- <div
-        class="inline-flex items-center gap-3 rounded-full bg-slate-950 px-5 py-3 shadow-2xl shadow-slate-900/20 ring-1 ring-slate-200/10"
-      >
-        <span class="text-sm tracking-[0.35em] text-slate-300">UNGODLY</span>
-        <span class="text-3xl font-black text-[var(--brand-logo)]">ACHV</span>
-        <span class="text-xl">💙</span>
-      </div> -->
+<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-2xl mx-auto">
+    <!-- Header/Logo -->
+    <div class="flex items-center justify-center mb-12">
+      <img
+        src="assets/ee41a994-c564-489f-a071-3fae7d4bf7bb.png"
+        alt="UNGODLY ACHV"
+        class="h-12 w-auto object-contain"
+      />
     </div>
 
+    <!-- Main Message -->
     <div class="text-center mb-12">
-      <p class="text-xl font-bold text-gray-900 mb-4">
-        Join to complete your signup and get notified when you application is accepted. 
-      </p>
-      <p class="text-lg text-gray-600">
-        Join agent channel for task reminders.
+      <h1 class="text-3xl font-black text-gray-900 mb-4 tracking-tight leading-tight">
+        Join to complete your signup and get notified when your application is accepted.
+      </h1>
+      <p class="text-gray-500 font-medium">
+        Complete the steps below to finish setting up your account.
       </p>
     </div>
 
-    <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
-      <div class="flex items-center justify-between mb-6">
-        <div class="flex-1">
-          <h2 class="text-2xl font-bold text-gray-900">
-            Join Telegram Channel
-          </h2>
-          <p class="text-gray-600 mt-2">
-            Get updates on new features and special announcements
-          </p>
+    <!-- Telegram Section -->
+    <div class="bg-white rounded-3xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100 mb-8">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h2 class="text-2xl font-black text-gray-900">Join Telegram Channel</h2>
+          <p class="text-gray-500 text-sm mt-1">Stay updated and complete your verification.</p>
         </div>
-        <div class="text-4xl">📱</div>
+        <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-2xl shadow-sm">
+          📱
+        </div>
       </div>
 
-      <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
-        <p class="text-blue-900">
-          <strong>Why join?</strong> You'll get access to exclusive engagement
-          tasks, community discussions, and early access to new features.
+      <div class="bg-blue-50/50 border border-blue-100 rounded-2xl p-5 mb-8">
+        <p class="text-blue-900 text-sm leading-relaxed">
+          <strong class="block mb-1">Why join?</strong>
+          You'll get access to exclusive engagement tasks, task reminders, and get notified immediately when your application is approved.
         </p>
       </div>
 
@@ -43,40 +42,34 @@
         (click)="joinTelegramChannel()"
         [class.opacity-50]="joined"
         [class.pointer-events-none]="joined"
-        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200"
+        class="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg hover:shadow-gray-200 active:scale-[0.98]"
       >
-        {{ joined ? "✓ Joined Telegram Channel" : "Join the channel" }}
+        <span class="flex items-center justify-center gap-3">
+          <svg *ngIf="!joined" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M11.944 0C5.352 0 0 5.352 0 12s5.352 12 12 12 12-5.352 12-12S18.648 0 11.944 0zM17.5 7.5l-2.5 11.5c-.1.5-.6.8-1.1.8-.1 0-.3 0-.4-.1l-4.5-2.5-2.5 2.5c-.2.2-.5.3-.8.3-.1 0-.2 0-.3-.1-.3-.1-.5-.5-.5-.8v-3.5l8.5-8.5-10.5 7.5-3.5-1.5c-.5-.2-.7-.7-.6-1.2.1-.5.6-.8 1.1-.9l16.5-6.5c.5-.2 1.1 0 1.3.5.2.5 0 1.1-.5 1.3z"/>
+          </svg>
+          {{ joined ? "✓ Joined Telegram Channel" : "Join the channel" }}
+        </span>
       </button>
     </div>
 
-    <div class="bg-white rounded-lg shadow-lg p-8">
-      <h2 class="text-2xl font-bold text-gray-900 mb-4">
-        Onboarding Checklist
-      </h2>
-      <div class="space-y-4">
-        <div *ngFor="let item of checklist" class="flex items-center">
+    <!-- Checklist Section -->
+    <div class="bg-white rounded-3xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100">
+      <h2 class="text-2xl font-black text-gray-900 mb-8">Onboarding Checklist</h2>
+      <div class="space-y-6">
+        <div *ngFor="let item of checklist" class="flex items-center p-4 rounded-2xl transition-colors" [class.bg-green-50]="item.completed" [class.bg-gray-50]="!item.completed">
           <div class="flex-shrink-0">
-            <svg
-              *ngIf="item.completed"
-              class="h-6 w-6 text-green-500"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            <div
-              *ngIf="!item.completed"
-              class="h-6 w-6 bg-gray-300 rounded-full"
-            ></div>
+            <div *ngIf="item.completed" class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center shadow-lg shadow-green-200">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <div *ngIf="!item.completed" class="w-8 h-8 bg-white border-2 border-gray-200 rounded-full"></div>
           </div>
           <p
-            [class.text-green-700]="item.completed"
-            [class.font-semibold]="item.completed"
-            class="ml-4 text-lg text-gray-700"
+            [class.text-green-900]="item.completed"
+            [class.font-bold]="item.completed"
+            class="ml-4 text-gray-700 font-medium"
           >
             {{ item.label }}
           </p>
@@ -86,18 +79,21 @@
       <button
         *ngIf="allCompleted"
         (click)="proceedToDashboard()"
-        routerLink="/dashboard"
-        class="mt-8 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200"
+        class="mt-10 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg hover:shadow-green-200 active:scale-[0.98]"
       >
         Go to Dashboard
       </button>
       <button
         *ngIf="!allCompleted"
         disabled
-        class="mt-8 w-full bg-gray-400 text-white font-bold py-3 px-4 rounded-lg cursor-not-allowed"
+        class="mt-10 w-full bg-gray-100 text-gray-400 font-bold py-4 px-6 rounded-2xl cursor-not-allowed border border-gray-200"
       >
         Complete onboarding to continue
       </button>
     </div>
+
+    <p class="text-center mt-12 text-gray-400 text-xs font-bold uppercase tracking-widest">
+      Ungodly ACHV &copy; 2026
+    </p>
   </div>
 </div>
