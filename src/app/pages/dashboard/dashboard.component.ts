@@ -42,6 +42,11 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   userInitial = 'X';
   private _observer: IntersectionObserver | null = null;
   
+  // Tab tracking
+  activeTab: 'available' | 'performed' = 'available';
+  performedTasks: any[] = [];
+  completedTaskIds: Set<string> = new Set();
+
   // Timer tracking
   taskTimers: { [taskId: string]: number } = {};
   private timerIntervals: { [taskId: string]: any } = {};
@@ -114,34 +119,54 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    this.loadTasks();
-    this.authService.currentUser$.subscribe(currentUser => {
+    this.authService.currentUser$.subscribe(async (user: any) => {
       this.hasTwitterSession = !!localStorage.getItem('twitter_access_token');
-      console.log('[Dashboard] hasTwitterSession:', this.hasTwitterSession);
-      if (currentUser) {
-        this.username = currentUser.email.split('@')[0];
-        // Check for verified status from profile
-        this.isVerifiedAccount = (currentUser as any).is_verified || false;
-        this.verified = this.isVerifiedAccount;
-        this.isAdmin = currentUser.role === 'admin';
-
-        if (currentUser.balance !== undefined) {
-          this.balance = currentUser.balance;
-        }
-
+      if (user) {
+        this.username = user.username || user.email.split('@')[0];
+        this.balance = user.balance || 0.0;
+        this.verified = user.is_verified || false;
+        this.isVerifiedAccount = user.is_verified || false;
+        this.tasksComplete = user.tasks_completed || 0;
+        this.earnings = user.total_earned || 0.0;
+        this.withdrawals = user.total_withdrawn || 0.0;
+        this.isAdmin = user.role === 'admin';
         this.userInitial = this.username.charAt(0).toUpperCase();
 
-        // Load withdrawal history
-        this.loadUserWithdrawals(currentUser.id);
+        // Load tasks and filter them
+        try {
+          // 1. Get completed task IDs
+          const completedIds = await this.supabase.getCompletedTasks(user.id);
+          this.completedTaskIds = new Set(completedIds);
+
+          // 2. Load all tasks
+          const tasks = await this.supabase.getTasks();
+          
+          // 3. Filter: Only show tasks the user HAS NOT done yet
+          this.engagementTasks = tasks.filter(t => !this.completedTaskIds.has(t.id));
+
+          // 4. Load full details for performed tasks tab
+          this.performedTasks = await this.supabase.getFullCompletedTasks(user.id);
+
+          console.log(`Loaded ${this.engagementTasks.length} available and ${this.performedTasks.length} performed tasks`);
+        } catch (err) {
+          console.error('Error loading tasks:', err);
+        }
+
+        // Load user withdrawals
+        try {
+          this.userWithdrawals = await this.supabase.getUserWithdrawals(user.id);
+        } catch (err) {
+          console.error('Error loading withdrawals:', err);
+        }
 
         // Subscribe to real-time withdrawal status updates
         this.supabase.client
-          .channel(`withdrawals:user_id=eq.${currentUser.id}`)
+          .channel(`withdrawals:user_id=eq.${user.id}`)
           .on('postgres_changes', {
             event: 'UPDATE',
             schema: 'public',
             table: 'withdrawals',
-            filter: `user_id=eq.${currentUser.id}`
+            filter: `user_id=eq.${user.id}`
           }, (payload: any) => {
             const updated = payload.new;
             const idx = this.userWithdrawals.findIndex((w: any) => w.id === updated.id);
@@ -294,32 +319,40 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    this.tasksComplete++;
-
     // Doubled reward logic for verified users (X Blue badge)
-    let finalReward = task.reward;
+    let totalReward = task.reward;
     if (this.isVerifiedAccount) {
-      finalReward *= 2;
-      console.log(`Verified user bonus applied: Reward doubled from $${task.reward} to $${finalReward}`);
+      totalReward *= 2;
+      console.log(`Verified user bonus applied: Reward doubled from $${task.reward} to $${totalReward}`);
     }
 
-    this.earnings += finalReward;
-    this.balance += finalReward;
+    // 2. Update user profile statistics
+    const currentUser = await this.authService.currentUser$.pipe(take(1)).toPromise();
+    if (!currentUser) throw new Error('User not authenticated');
 
-    this.authService.currentUser$.pipe(take(1)).subscribe(async (currentUser: any) => {
-      if (currentUser) {
-        try {
-          await this.supabase.updateProfile(currentUser.id, { balance: this.balance });
-        } catch (error) {
-          console.error('Failed to update balance:', error);
-        }
-      }
+    // Record completion in user_tasks table to prevent duplicate claims
+    const recordResult = await this.supabase.recordTaskCompletion(currentUser.id, task.id, totalReward);
+    if (recordResult.alreadyDone) {
+      alert('You have already completed this task!');
+      this.verifyingTaskId = null;
+      return;
+    }
+
+    const newBalance = (currentUser.balance || 0) + totalReward;
+    const newTotalEarned = (currentUser.total_earned || 0) + totalReward;
+    const newTasksCount = (currentUser.tasks_completed || 0) + 1;
+
+    await this.supabase.updateProfile(currentUser.id, {
+      balance: newBalance,
+      total_earned: newTotalEarned,
+      tasks_completed: newTasksCount
     });
 
     this.engagementTasks = this.engagementTasks.filter(t => t.id !== task.id);
+    this.completedTaskIds.add(task.id);
     this.verifyingTaskId = null;
 
-    alert(`Task validated! You earned $${finalReward.toFixed(2)}`);
+    alert(`Task validated! You earned $${totalReward.toFixed(2)}`);
   }
 
   async submitWithdrawal() {

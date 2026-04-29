@@ -36,7 +36,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     title: '',
     image: '',
     postLink: '',
-    reward: 0.5,
+    reward: 0.05,
     boost: 0.05,
     actions: '',
     required_like: true,

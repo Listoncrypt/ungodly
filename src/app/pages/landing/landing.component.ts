@@ -103,4 +103,9 @@ export class LandingComponent implements AfterViewInit, OnDestroy, OnInit {
     this.closeBookMeetModal();
     this.bookMeetForm = { name: '', email: '', project: '', details: '' };
   }
-}
+
+  onLearnMore() {
+    // Placeholder for future update
+    alert('Learn More feature coming soon!');
+  }
+}

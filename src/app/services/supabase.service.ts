@@ -248,6 +248,46 @@ export class SupabaseService {
     return true;
   }
 
+  async recordTaskCompletion(userId: string, taskId: string, reward: number) {
+    const { error } = await this.supabase
+      .from('user_tasks')
+      .insert({
+        user_id: userId,
+        task_id: taskId,
+        reward_amount: reward
+      });
+    
+    if (error) {
+      if (error.code === '23505') return { alreadyDone: true }; // Unique constraint violation
+      throw error;
+    }
+    return { success: true };
+  }
+
+  async getCompletedTasks(userId: string) {
+    const { data, error } = await this.supabase
+      .from('user_tasks')
+      .select('task_id')
+      .eq('user_id', userId);
+    
+    if (error) throw error;
+    return data.map(item => item.task_id);
+  }
+
+  async getFullCompletedTasks(userId: string) {
+    const { data, error } = await this.supabase
+      .from('user_tasks')
+      .select(`
+        *,
+        tasks (*)
+      `)
+      .eq('user_id', userId)
+      .order('completed_at', { ascending: false });
+    
+    if (error) throw error;
+    return data;
+  }
+
   async profileExists(userId: string): Promise<boolean> {
     try {
       const { data, error } = await this.supabase
