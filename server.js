@@ -271,60 +271,80 @@ app.post('/api/record-engagement', (req, res) => {
 // Endpoint to verify if user actually engaged with a tweet
 app.post('/api/verify-engagement', async (req, res) => {
   try {
-    let { accessToken, refreshToken, tweetId, userId } = req.body;
+    let { accessToken, refreshToken, tweetId, userId, required } = req.body;
+
+    // Default required actions if not provided (compatibility with old tasks)
+    if (!required) {
+      required = { like: true, repost: true, comment: false };
+    }
 
     if (!accessToken || !tweetId || !userId) {
       return res.status(400).json({ error: 'Missing required parameters' });
     }
 
-    console.log('Verifying engagement for tweet:', tweetId, 'by user:', userId);
+    console.log('Verifying engagement for tweet:', tweetId, 'by user:', userId, 'required:', required);
 
     // Method 1: Try Twitter API v2 (requires Basic tier)
-    const verifyViaAPI = async (token) => {
+    const verifyViaAPI = async (token, required) => {
       try {
-        // Check if user liked the tweet
-        const likedResponse = await fetch(`https://api.twitter.com/2/users/${userId}/liked_tweets?max_results=100`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const results = {
+          like: !required.like,
+          repost: !required.repost,
+          comment: !required.comment
+        };
 
-        console.log('Liked tweets API status:', likedResponse.status);
-
-        if (likedResponse.status === 401 && refreshToken) {
-          return { retry: true };
+        // 1. Check Likes
+        if (required.like) {
+          const likedResponse = await fetch(`https://api.twitter.com/2/users/${userId}/liked_tweets?max_results=100`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          if (likedResponse.status === 401 && refreshToken) return { retry: true };
+          if (likedResponse.status === 403) return { fallback: true };
+          
+          if (likedResponse.ok) {
+            const likedData = await likedResponse.json();
+            results.like = likedData.data?.some(tweet => tweet.id === tweetId) || false;
+          }
         }
 
-        // 403 means Free tier - fall through to fallback
-        if (likedResponse.status === 403) {
-          console.log('Twitter API returned 403 - Free tier detected, using fallback');
-          return { fallback: true };
+        // 2. Check Tweets (Reposts and Replies/Comments)
+        if (required.repost || required.comment) {
+          const tweetsResponse = await fetch(`https://api.twitter.com/2/users/${userId}/tweets?max_results=100&tweet.fields=referenced_tweets`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+
+          if (tweetsResponse.status === 403) return { fallback: true };
+
+          if (tweetsResponse.ok) {
+            const tweetsData = await tweetsResponse.json();
+            const tweets = tweetsData.data || [];
+
+            if (required.repost) {
+              results.repost = tweets.some(tweet =>
+                tweet.referenced_tweets?.some(ref => ref.type === 'retweeted' && ref.id === tweetId)
+              );
+            }
+
+            if (required.comment) {
+              results.comment = tweets.some(tweet =>
+                tweet.referenced_tweets?.some(ref => ref.type === 'replied_to' && ref.id === tweetId)
+              );
+            }
+          }
         }
 
-        if (likedResponse.ok) {
-          const likedData = await likedResponse.json();
-          const liked = likedData.data?.some(tweet => tweet.id === tweetId);
-          if (liked) return { verified: true, method: 'like' };
-        }
+        const allVerified = results.like && results.repost && results.comment;
+        const missing = [];
+        if (required.like && !results.like) missing.push('Like');
+        if (required.repost && !results.repost) missing.push('Repost');
+        if (required.comment && !results.comment) missing.push('Comment');
 
-        // Check if user retweeted
-        const tweetsResponse = await fetch(`https://api.twitter.com/2/users/${userId}/tweets?max_results=100&tweet.fields=referenced_tweets`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        console.log('User tweets API status:', tweetsResponse.status);
-
-        if (tweetsResponse.status === 403) {
-          return { fallback: true };
-        }
-
-        if (tweetsResponse.ok) {
-          const tweetsData = await tweetsResponse.json();
-          const retweeted = tweetsData.data?.some(tweet =>
-            tweet.referenced_tweets?.some(ref => ref.type === 'retweeted' && ref.id === tweetId)
-          );
-          if (retweeted) return { verified: true, method: 'retweet' };
-        }
-
-        return { verified: false };
+        return { 
+          verified: allVerified, 
+          missing: missing,
+          method: 'api' 
+        };
       } catch (apiError) {
         console.error('Twitter API error:', apiError.message);
         return { fallback: true };
@@ -386,7 +406,7 @@ app.post('/api/verify-engagement', async (req, res) => {
     };
 
     // Try API method first
-    let result = await verifyViaAPI(accessToken);
+    let result = await verifyViaAPI(accessToken, required);
 
     // Handle token refresh
     if (result.retry) {
@@ -396,7 +416,7 @@ app.post('/api/verify-engagement', async (req, res) => {
         console.log('Token refreshed successfully');
         accessToken = newTokenData.access_token;
         refreshToken = newTokenData.refresh_token;
-        result = await verifyViaAPI(accessToken);
+        result = await verifyViaAPI(accessToken, required);
         if (!result.fallback && !result.retry) {
           result.newTokens = { accessToken, refreshToken };
         }

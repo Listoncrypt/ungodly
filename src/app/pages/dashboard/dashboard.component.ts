@@ -231,7 +231,13 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.verifyingTaskId = task.id;
     console.log('Verifying engagement for tweet:', tweetId);
 
-    const result = await this.verifyEngagement(tweetId);
+    const required = {
+      like: task.required_like || false,
+      repost: task.required_repost || false,
+      comment: task.required_comment || false
+    };
+
+    const result = await this.verifyEngagement(tweetId, required);
 
     if (result === 'missing_auth') {
       alert('Your Twitter session has expired. Please tap "Connect Account" to reconnect your X account.');
@@ -240,13 +246,20 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (result === 'too_fast') {
-      alert('Please wait a moment after engaging with the post before verifying. Make sure you liked or retweeted the tweet first!');
+      alert('Please wait a moment after engaging with the post before verifying. Make sure you liked, retweeted, or commented on the tweet first!');
+      this.verifyingTaskId = null;
+      return;
+    }
+
+    if (typeof result === 'string' && result.startsWith('missing:')) {
+      const missing = result.replace('missing:', '');
+      alert(`Engagement incomplete! You still need to: ${missing}. Please complete all required actions and try again.`);
       this.verifyingTaskId = null;
       return;
     }
 
     if (!result) {
-      alert('Engagement verification failed. Please click "Engage on X" first, like or retweet the post, then come back and click "Verify".');
+      alert('Engagement verification failed. Please click "Engage on X" first, complete the required actions, then come back and click "Verify".');
       this.verifyingTaskId = null;
       return;
     }
@@ -333,7 +346,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     return match ? match[1] : null;
   }
 
-  private async verifyEngagement(tweetId: string): Promise<boolean | string> {
+  private async verifyEngagement(tweetId: string, required: any): Promise<boolean | string> {
     const accessToken = localStorage.getItem('twitter_access_token');
     const refreshToken = localStorage.getItem('twitter_refresh_token');
     const twitterUserId = localStorage.getItem('twitter_user_id');
@@ -351,9 +364,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         },
         body: JSON.stringify({
           accessToken,
-          refreshToken, // Pass refresh token to allow backend to refresh if needed
+          refreshToken, 
           tweetId,
-          userId: twitterUserId
+          userId: twitterUserId,
+          required
         })
       });
 
@@ -394,6 +408,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       // Return specific reasons for better user feedback
       if (result.reason === 'too_fast') return 'too_fast';
       if (result.reason === 'no_engagement_click') return false;
+      if (result.verified === false && result.missing && result.missing.length > 0) {
+        return 'missing:' + result.missing.join(', ');
+      }
       
       return result.verified;
     } catch (error) {
