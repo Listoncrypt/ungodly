@@ -200,6 +200,15 @@ app.get('/api/auth/callback/twitter', async (req, res) => {
 
     console.log('User data:', { twitterHandle, followersCount, isVerified, twitterUserId });
 
+    // ENFORCE 1,000 FOLLOWER LIMIT
+    if (followersCount < 1000) {
+      console.log('Rejected: User has less than 1,000 followers');
+      const failUrl = new URL(callbackURL);
+      failUrl.searchParams.set('error', 'insufficient_followers');
+      failUrl.searchParams.set('count', followersCount.toString());
+      return res.redirect(failUrl.toString());
+    }
+
     // Success: Redirect back to frontend
     const redirectUrl = new URL(callbackURL);
     redirectUrl.searchParams.set('twitter_handle', twitterHandle);
@@ -377,27 +386,12 @@ app.post('/api/verify-engagement', async (req, res) => {
         const meData = await meResponse.json();
         console.log('Verified user identity:', meData.data?.username);
 
-        // Step 2: Check they clicked "Engage on X" (timestamp recorded)
+        // We trust the frontend timer for the 25-second wait
+        // Clean up any timestamp if it exists, but don't fail if missing
         const key = `${userId}:${tweetId}`;
-        const engageTime = engagementTimestamps.get(key);
-
-        if (!engageTime) {
-          console.log('No engagement timestamp found - user did not click Engage on X');
-          return { verified: false, reason: 'no_engagement_click' };
-        }
-
-        // Step 3: Ensure at least 10 seconds passed (time to actually like/retweet)
-        const elapsed = Date.now() - engageTime;
-        const MIN_ENGAGE_TIME = 10000; // 10 seconds
-
-        if (elapsed < MIN_ENGAGE_TIME) {
-          console.log(`Only ${elapsed}ms elapsed. Need at least ${MIN_ENGAGE_TIME}ms`);
-          return { verified: false, reason: 'too_fast' };
-        }
-
-        console.log(`Fallback verification passed: valid session + ${elapsed}ms elapsed`);
-        // Clean up the timestamp
         engagementTimestamps.delete(key);
+
+        console.log(`Verification passed: valid session confirmed.`);
         return { verified: true, method: 'session_verified' };
       } catch (fallbackError) {
         console.error('Fallback verification error:', fallbackError.message);
@@ -405,8 +399,9 @@ app.post('/api/verify-engagement', async (req, res) => {
       }
     };
 
-    // Try API method first
-    let result = await verifyViaAPI(accessToken, required);
+    // Always use fallback (timed claim) for 100% reliability
+    console.log('Using timed claim verification...');
+    let result = await verifyViaFallback(accessToken);
 
     // Handle token refresh
     if (result.retry) {
@@ -416,31 +411,10 @@ app.post('/api/verify-engagement', async (req, res) => {
         console.log('Token refreshed successfully');
         accessToken = newTokenData.access_token;
         refreshToken = newTokenData.refresh_token;
-        result = await verifyViaAPI(accessToken, required);
-        if (!result.fallback && !result.retry) {
-          result.newTokens = { accessToken, refreshToken };
-        }
+        result = await verifyViaFallback(accessToken);
+        result.newTokens = { accessToken, refreshToken };
       } else {
         return res.status(401).json({ error: 'Session expired and refresh failed' });
-      }
-    }
-
-    // If API method requires paid tier, use fallback
-    if (result.fallback) {
-      console.log('Using fallback verification method...');
-      result = await verifyViaFallback(accessToken);
-
-      // Handle refresh in fallback too
-      if (result.retry) {
-        const newTokenData = await refreshTwitterToken(refreshToken);
-        if (newTokenData) {
-          accessToken = newTokenData.access_token;
-          refreshToken = newTokenData.refresh_token;
-          result = await verifyViaFallback(accessToken);
-          result.newTokens = { accessToken, refreshToken };
-        } else {
-          return res.status(401).json({ error: 'Session expired and refresh failed' });
-        }
       }
     }
 

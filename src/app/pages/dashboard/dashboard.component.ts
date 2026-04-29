@@ -41,6 +41,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   userInitial = 'X';
   private _observer: IntersectionObserver | null = null;
+  
+  // Timer tracking
+  taskTimers: { [taskId: string]: number } = {};
+  private timerIntervals: { [taskId: string]: any } = {};
 
   constructor(
     private authService: AuthService,
@@ -70,7 +74,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         twitterHandle 
       });
 
-      // 1. Store everything in localStorage (primary storage since DB columns are missing)
+      // 1. Store everything in localStorage
       if (accessToken) localStorage.setItem('twitter_access_token', accessToken);
       if (refreshToken) localStorage.setItem('twitter_refresh_token', refreshToken);
       if (twitterUserId) localStorage.setItem('twitter_user_id', twitterUserId);
@@ -86,17 +90,22 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
               twitter_handle: twitterHandle || undefined,
               twitter_followers: parseInt(followersCount || '0')
             });
-            console.log('[Dashboard] Basic profile info updated in DB');
           } catch (err: any) {
-            console.error('[Dashboard] DB update failed (expected if columns missing):', err.message);
+            console.error('[Dashboard] DB update failed:', err.message);
           }
           
           alert('Twitter connected successfully!');
-          // Clear query params and reload to clean up URL and properly initialize
           window.history.replaceState({}, document.title, window.location.pathname);
           window.location.reload();
         }
       });
+      return;
+    }
+
+    if (error === 'insufficient_followers') {
+      const count = params.get('count') || '0';
+      alert(`Account Rejected: Your X account only has ${count} followers. You must have at least 1,000 followers to use this platform.`);
+      window.history.replaceState({}, document.title, window.location.pathname);
       return;
     }
 
@@ -159,6 +168,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       this._observer.disconnect();
       this._observer = null;
     }
+    // Clear all active timers
+    Object.values(this.timerIntervals).forEach(interval => clearInterval(interval));
   }
 
   private initScrollObserver() {
@@ -196,15 +207,34 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   engageOnX(task: PlatformTask) {
+    if (!this.hasTwitterSession) {
+      alert('Please connect your X account first!');
+      return;
+    }
+
     console.log('Opening X (Twitter)...', task.post_link);
     window.open(task.post_link || 'https://x.com', '_blank');
+    
     this.verifyingTaskId = task.id;
+    this.taskTimers[task.id] = 25; // 25 second timer
 
-    // Record engagement start time on the backend for verification
+    // Start countdown
+    if (this.timerIntervals[task.id]) clearInterval(this.timerIntervals[task.id]);
+    
+    this.timerIntervals[task.id] = setInterval(() => {
+      if (this.taskTimers[task.id] > 0) {
+        this.taskTimers[task.id]--;
+      } else {
+        clearInterval(this.timerIntervals[task.id]);
+      }
+    }, 1000);
+
+    // Record engagement start time on the backend
     const tweetId = this.extractTweetId(task.post_link || '');
     const twitterUserId = localStorage.getItem('twitter_user_id');
     if (tweetId && twitterUserId) {
       fetch(`${environment.backendUrl}/api/record-engagement`, {
+        // ... (rest same as before)
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tweetId, userId: twitterUserId })
@@ -222,6 +252,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async verifyTask(task: PlatformTask) {
+    // Check if timer is still running
+    if (this.taskTimers[task.id] > 0) {
+      alert(`Please wait ${this.taskTimers[task.id]} more seconds to claim your reward. Make sure you liked/reposted the post!`);
+      return;
+    }
+
     const tweetId = this.extractTweetId(task.post_link || '');
     if (!tweetId) {
       alert('Unable to extract Tweet ID from the link. Please contact support.');
@@ -229,15 +265,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.verifyingTaskId = task.id;
-    console.log('Verifying engagement for tweet:', tweetId);
+    console.log('Claiming reward for tweet:', tweetId);
 
-    const required = {
-      like: task.required_like || false,
-      repost: task.required_repost || false,
-      comment: task.required_comment || false
-    };
-
-    const result = await this.verifyEngagement(tweetId, required);
+    const result = await this.verifyEngagement(tweetId, {});
 
     if (result === 'missing_auth') {
       alert('Your Twitter session has expired. Please tap "Connect Account" to reconnect your X account.');

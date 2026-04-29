@@ -225,12 +225,17 @@
             <button
               *ngIf="verifyingTaskId === task.id"
               (click)="verifyTask(task)"
-              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors text-sm flex items-center justify-center gap-2 animate-pulse"
+              [disabled]="taskTimers[task.id] > 0"
+              class="w-full font-semibold py-2.5 rounded-lg transition-colors text-sm flex items-center justify-center gap-2"
+              [ngClass]="taskTimers[task.id] > 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white animate-bounce'"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg *ngIf="taskTimers[task.id] > 0" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <svg *ngIf="taskTimers[task.id] === 0" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
-              Verify Engagement
+              {{ taskTimers[task.id] > 0 ? 'Verifying in ' + taskTimers[task.id] + 's...' : 'Claim Reward' }}
             </button>
           </div>
         </div>
