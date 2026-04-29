@@ -12,6 +12,10 @@ export interface Profile {
   is_approved: boolean;
   twitter_followers?: number;
   twitter_handle?: string;
+  twitter_user_id?: string;
+  twitter_access_token?: string;
+  twitter_refresh_token?: string;
+  is_verified?: boolean;
   balance?: number;
   created_at?: string;
 }
