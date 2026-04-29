@@ -165,14 +165,9 @@
         <span>Ungodly ACHV is the first fully automated platform built exclusively for Web3 that helps your Project reach and engage real audiences on X in a completely natural, organic way</span>
       </p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <!-- <button
-          (click)="onBecomeAgent()"
-          class="px-8 py-3 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors text-lg"
-        >
-          Get Started
-        </button> -->
-        <button
-          (click)="joinTelegram()"
+        <a
+          href="https://t.me/Ungodlyachvportfolio"
+          target="_blank"
           class="flex-1 sm:flex-none px-8 py-3 bg-white text-gray-900 font-bold rounded-xl border-2 border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-all text-lg shadow-sm flex items-center justify-center gap-2"
         >
           <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -180,7 +175,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
           </svg>
           View Results
-        </button>
+        </a>
         <button
           (click)="onLearnMore()"
           class="flex-1 sm:flex-none px-8 py-3 bg-gray-50 text-gray-500 font-bold rounded-xl border-2 border-transparent hover:bg-gray-100 transition-all text-lg flex items-center justify-center gap-2"
@@ -331,51 +326,32 @@
 
   <!-- Book a Meet Modal -->
   <div *ngIf="isBookMeetModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-        <h3 class="text-xl font-bold text-gray-900">Book a Meet</h3>
-        <button (click)="closeBookMeetModal()" class="text-gray-400 hover:text-gray-700 transition">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+      <div class="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+        <h3 class="text-2xl font-black text-gray-900">Book a Meet</h3>
+        <button (click)="closeBookMeetModal()" class="text-gray-400 hover:text-gray-900 transition-colors">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
         </button>
       </div>
-      <form (ngSubmit)="submitBookMeet()" class="p-6 space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-          <input type="text" [(ngModel)]="bookMeetForm.name" name="name" required
-                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                 placeholder="Your name">
+      <div class="p-8 text-center">
+        <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+          </svg>
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-          <input type="email" [(ngModel)]="bookMeetForm.email" name="email" required
-                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                 placeholder="you@company.com">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Project/Company Name *</label>
-          <input type="text" [(ngModel)]="bookMeetForm.project" name="project" required
-                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                 placeholder="Your project name">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Additional Details</label>
-          <textarea [(ngModel)]="bookMeetForm.details" name="details" rows="3"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent transition resize-none"
-                    placeholder="Tell us what you'd like to discuss..."></textarea>
-        </div>
-        <div class="pt-4 flex justify-end gap-3">
-          <button type="button" (click)="closeBookMeetModal()" 
-                  class="px-5 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg transition">
-            Cancel
-          </button>
-          <button type="submit" 
-                  class="px-5 py-2 bg-black text-white font-medium hover:bg-gray-800 rounded-lg transition shadow-lg">
-            Submit Request
-          </button>
-        </div>
-      </form>
+        <p class="text-gray-600 font-medium mb-8 leading-relaxed">
+          Send over your projects info through our partnership mail a team member of ours would follow up.
+        </p>
+        <a 
+          href="mailto:contact@ungodly.achv?subject=Book a Meet"
+          (click)="closeBookMeetModal()"
+          class="block w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-4 rounded-2xl transition-all shadow-lg hover:shadow-gray-200 text-center"
+        >
+          Book
+        </a>
+      </div>
     </div>
   </div>
 </div>
