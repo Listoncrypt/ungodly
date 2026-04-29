@@ -58,22 +58,25 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (twitterSuccess) {
       const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token');
       const twitterUserId = params.get('twitter_user_id');
       const twitterHandle = params.get('twitter_handle');
       const followersCount = params.get('followers_count');
       const isVerified = params.get('is_verified') === 'true';
 
-      console.log('[Dashboard] OAuth callback data:', { accessToken: !!accessToken, twitterUserId, twitterHandle, followersCount, isVerified });
+      console.log('[Dashboard] OAuth callback data:', { 
+        accessToken: !!accessToken, 
+        refreshToken: !!refreshToken,
+        twitterUserId, 
+        twitterHandle, 
+        followersCount, 
+        isVerified 
+      });
 
-      // Store token immediately before any async operations
-      if (accessToken) {
-        localStorage.setItem('twitter_access_token', accessToken);
-        console.log('[Dashboard] Twitter access token saved to localStorage');
-      }
-      if (twitterUserId) {
-        localStorage.setItem('twitter_user_id', twitterUserId);
-        console.log('[Dashboard] Twitter user ID saved to localStorage');
-      }
+      // Store tokens immediately
+      if (accessToken) localStorage.setItem('twitter_access_token', accessToken);
+      if (refreshToken) localStorage.setItem('twitter_refresh_token', refreshToken);
+      if (twitterUserId) localStorage.setItem('twitter_user_id', twitterUserId);
 
       // Update hasTwitterSession flag immediately
       this.hasTwitterSession = !!localStorage.getItem('twitter_access_token');
@@ -82,33 +85,30 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       this.authService.currentUser$.pipe(take(1)).subscribe(async (currentUser: any) => {
         if (currentUser) {
           try {
-            console.log('[Dashboard] Updating profile for user:', currentUser.id, 'with data:', {
-              twitter_handle: twitterHandle,
-              twitter_followers: parseInt(followersCount || '0'),
-              is_verified: isVerified
-            });
+            console.log('[Dashboard] Updating profile for user:', currentUser.id);
             await this.supabase.updateProfile(currentUser.id, {
               twitter_handle: twitterHandle || undefined,
               twitter_followers: parseInt(followersCount || '0'),
-              is_verified: isVerified
+              is_verified: isVerified,
+              twitter_access_token: accessToken || undefined,
+              twitter_refresh_token: refreshToken || undefined,
+              twitter_user_id: twitterUserId || undefined
             });
+            
             console.log('[Dashboard] Profile updated with Twitter data');
-            alert('Twitter connected successfully!');
+            alert('Twitter connected successfully! You can now verify tasks.');
+            
             // Clear query params and reload to get updated data
             window.history.replaceState({}, document.title, window.location.pathname);
             setTimeout(() => window.location.reload(), 500);
           } catch (err: any) {
             console.error('[Dashboard] Failed to update profile:', err);
-            console.error('[Dashboard] Error details:', JSON.stringify(err));
-            alert('Twitter connected but profile update failed: ' + (err.message || 'Unknown error'));
+            alert('Twitter connected but profile update failed. Verification might still work using local session.');
             window.history.replaceState({}, document.title, window.location.pathname);
           }
-        } else {
-          console.error('[Dashboard] No current user found');
-          alert('Please log in again to complete Twitter connection.');
         }
       });
-      return; // Don't continue with normal init until after reload
+      return;
     }
 
     if (error) {
@@ -125,7 +125,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         // Check for verified status from profile
         this.isVerifiedAccount = (currentUser as any).is_verified || false;
         this.verified = this.isVerifiedAccount;
-        this.boost = currentUser.boost || 0;
         this.isAdmin = currentUser.role === 'admin';
 
         if (currentUser.balance !== undefined) {
@@ -248,15 +247,11 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.tasksComplete++;
 
+    // Doubled reward logic for verified users (X Blue badge)
     let finalReward = task.reward;
-    // Apply task boost ONLY if user is twitter verified
     if (this.isVerifiedAccount) {
-      finalReward += task.boost;
-    }
-
-    // Apply follower-based percentage boost if applicable
-    if (this.boost > 0) {
-      finalReward += finalReward * (this.boost / 100);
+      finalReward *= 2;
+      console.log(`Verified user bonus applied: Reward doubled from $${task.reward} to $${finalReward}`);
     }
 
     this.earnings += finalReward;
@@ -334,6 +329,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private async verifyEngagement(tweetId: string): Promise<boolean | string> {
     const accessToken = localStorage.getItem('twitter_access_token');
+    const refreshToken = localStorage.getItem('twitter_refresh_token');
     const twitterUserId = localStorage.getItem('twitter_user_id');
 
     if (!accessToken || !twitterUserId) {
@@ -349,16 +345,42 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         },
         body: JSON.stringify({
           accessToken,
+          refreshToken, // Pass refresh token to allow backend to refresh if needed
           tweetId,
           userId: twitterUserId
         })
       });
 
       if (!response.ok) {
+        if (response.status === 401) return 'missing_auth';
         return false;
       }
 
       const result = await response.json();
+      
+      // If backend refreshed tokens, update them in localStorage and database
+      if (result.newTokens) {
+        console.log('Updating local tokens with refreshed versions');
+        localStorage.setItem('twitter_access_token', result.newTokens.accessToken);
+        if (result.newTokens.refreshToken) {
+          localStorage.setItem('twitter_refresh_token', result.newTokens.refreshToken);
+        }
+        
+        // Background update of profile
+        this.authService.currentUser$.pipe(take(1)).subscribe(async (currentUser: any) => {
+          if (currentUser) {
+            try {
+              await this.supabase.updateProfile(currentUser.id, {
+                twitter_access_token: result.newTokens.accessToken,
+                twitter_refresh_token: result.newTokens.refreshToken
+              });
+            } catch (e) {
+              console.error('Failed to sync refreshed tokens to DB', e);
+            }
+          }
+        });
+      }
+
       return result.verified;
     } catch (error) {
       console.error('Verification failed:', error);

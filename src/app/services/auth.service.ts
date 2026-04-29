@@ -58,9 +58,10 @@ export class AuthService {
         email: supabaseUser.email || '',
         role: profile?.role || 'user',
         is_approved: profile?.is_approved || false,
-        verified: profile?.is_approved || false,
-        twitterHandle: twitterHandle,
-        twitterId: twitterId
+        verified: profile?.is_verified || profile?.is_approved || false,
+        twitterHandle: profile?.twitter_handle || twitterHandle,
+        twitterId: profile?.twitter_user_id || twitterId,
+        balance: profile?.balance || 0
       };
 
       // Auto-capture Twitter token if available in session
@@ -138,7 +139,12 @@ export class AuthService {
     const origin = window.location.origin;
     const backendUrl = environment.backendUrl;
     const callbackURL = redirectTo || `${origin}/signup`;
-    window.location.href = `${backendUrl}/api/auth/twitter?callbackURL=${encodeURIComponent(callbackURL)}`;
+    
+    // Pass current userId if logged in to link accounts properly on the backend
+    const currentUser = this.getCurrentUser();
+    const userIdParam = currentUser?.id ? `&userId=${currentUser.id}` : '';
+    
+    window.location.href = `${backendUrl}/api/auth/twitter?callbackURL=${encodeURIComponent(callbackURL)}${userIdParam}`;
   }
 
   logout(redirect: boolean = true): Promise<void> {

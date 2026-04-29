@@ -38,20 +38,18 @@ export class SignupComponent implements OnInit {
   ngOnInit() {
     // Check if user returned from Twitter OAuth
     const params = new URLSearchParams(window.location.search);
-    const twitterSuccess = params.get('twitter_success');
+    const twitterSuccess = params.get('twitter_success') === 'true' || params.get('success') === 'true';
     const error = params.get('error');
     const details = params.get('details');
-    const followersCount = params.get('followers_count');
     
     if (error) {
       this.error = decodeURIComponent(details || error);
       this.twitterVerified = false;
-      // Clear the query params
       window.history.replaceState({}, document.title, window.location.pathname);
       return;
     }
     
-    if (twitterSuccess === 'true') {
+    if (twitterSuccess) {
       const authData = sessionStorage.getItem('twitter_auth_data');
       if (authData) {
         const data = JSON.parse(authData);
@@ -59,48 +57,27 @@ export class SignupComponent implements OnInit {
         this.followersCount = data.followersCount || parseInt(params.get('followers_count') || '0');
         this.isTwitterVerified = data.isVerified || params.get('is_verified') === 'true';
 
-        console.log('Twitter data loaded:', {
-          handle: this.twitterHandle,
-          followers: this.followersCount,
-          verified: this.isTwitterVerified
-        });
-
-        if (data.accessToken) {
-          localStorage.setItem('twitter_access_token', data.accessToken);
-          console.log('Twitter access token saved to localStorage');
-        }
-        if (data.twitterUserId) {
-          localStorage.setItem('twitter_user_id', data.twitterUserId);
-          console.log('Twitter user ID saved to localStorage');
-        }
+        if (data.accessToken) localStorage.setItem('twitter_access_token', data.accessToken);
+        if (data.refreshToken) localStorage.setItem('twitter_refresh_token', data.refreshToken);
+        if (data.twitterUserId) localStorage.setItem('twitter_user_id', data.twitterUserId);
       } else {
-        // Fallback to query params if sessionStorage is empty
+        // Fallback to query params
         this.twitterHandle = params.get('twitter_handle') || '';
         this.followersCount = parseInt(params.get('followers_count') || '0');
         this.isTwitterVerified = params.get('is_verified') === 'true';
-        console.log('Using query params fallback:', {
-          handle: this.twitterHandle,
-          followers: this.followersCount
-        });
-
+        
         const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
         const twitterUserId = params.get('twitter_user_id');
-        if (accessToken) {
-          localStorage.setItem('twitter_access_token', accessToken);
-        }
-        if (twitterUserId) {
-          localStorage.setItem('twitter_user_id', twitterUserId);
-        }
+        
+        if (accessToken) localStorage.setItem('twitter_access_token', accessToken);
+        if (refreshToken) localStorage.setItem('twitter_refresh_token', refreshToken);
+        if (twitterUserId) localStorage.setItem('twitter_user_id', twitterUserId);
       }
 
-      // Update form with Twitter handle
       this.signupForm.patchValue({ twitterHandle: this.twitterHandle });
-
-      // Twitter connected successfully — admin approval handles access control
       this.twitterVerified = true;
       this.error = '';
-
-      // Clear the query params
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }
