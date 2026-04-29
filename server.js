@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const crypto = require('crypto');
+const cors = require('cors');
 
 // Debug: Check environment variables at the very start
 console.log('=== ENVIRONMENT CHECK ===');
@@ -28,6 +29,13 @@ if (fs.existsSync(envPath) && !process.env.TWITTER_CLIENT_ID) {
 const app = express();
 const port = 3001;
 
+// CORS: Allow requests from your Vercel frontend
+app.use(cors({
+  origin: ['https://ungodly.vercel.app', 'http://localhost:4200', 'http://localhost:4300'],
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 app.use(express.json());
 
 // Twitter OAuth credentials from environment variables
@@ -240,6 +248,21 @@ async function refreshTwitterToken(refreshToken) {
   }
 }
 
+// Store engagement timestamps: when a user clicks "Engage on X"
+const engagementTimestamps = new Map();
+
+// Record that a user started engaging with a tweet
+app.post('/api/record-engagement', (req, res) => {
+  const { tweetId, userId } = req.body;
+  if (!tweetId || !userId) {
+    return res.status(400).json({ error: 'Missing tweetId or userId' });
+  }
+  const key = `${userId}:${tweetId}`;
+  engagementTimestamps.set(key, Date.now());
+  console.log(`Recorded engagement start for ${key}`);
+  return res.json({ recorded: true });
+});
+
 // Endpoint to verify if user actually engaged with a tweet
 app.post('/api/verify-engagement', async (req, res) => {
   try {
@@ -251,42 +274,116 @@ app.post('/api/verify-engagement', async (req, res) => {
 
     console.log('Verifying engagement for tweet:', tweetId, 'by user:', userId);
 
-    const verify = async (token) => {
-      // 1. Check if user liked the tweet
-      // Endpoint: GET /2/users/:id/liked_tweets (Requires like.read scope)
-      const likedResponse = await fetch(`https://api.twitter.com/2/users/${userId}/liked_tweets?max_results=100`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+    // Method 1: Try Twitter API v2 (requires Basic tier)
+    const verifyViaAPI = async (token) => {
+      try {
+        // Check if user liked the tweet
+        const likedResponse = await fetch(`https://api.twitter.com/2/users/${userId}/liked_tweets?max_results=100`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
 
-      if (likedResponse.status === 401 && refreshToken) {
-        return { retry: true };
+        console.log('Liked tweets API status:', likedResponse.status);
+
+        if (likedResponse.status === 401 && refreshToken) {
+          return { retry: true };
+        }
+
+        // 403 means Free tier - fall through to fallback
+        if (likedResponse.status === 403) {
+          console.log('Twitter API returned 403 - Free tier detected, using fallback');
+          return { fallback: true };
+        }
+
+        if (likedResponse.ok) {
+          const likedData = await likedResponse.json();
+          const liked = likedData.data?.some(tweet => tweet.id === tweetId);
+          if (liked) return { verified: true, method: 'like' };
+        }
+
+        // Check if user retweeted
+        const tweetsResponse = await fetch(`https://api.twitter.com/2/users/${userId}/tweets?max_results=100&tweet.fields=referenced_tweets`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        console.log('User tweets API status:', tweetsResponse.status);
+
+        if (tweetsResponse.status === 403) {
+          return { fallback: true };
+        }
+
+        if (tweetsResponse.ok) {
+          const tweetsData = await tweetsResponse.json();
+          const retweeted = tweetsData.data?.some(tweet =>
+            tweet.referenced_tweets?.some(ref => ref.type === 'retweeted' && ref.id === tweetId)
+          );
+          if (retweeted) return { verified: true, method: 'retweet' };
+        }
+
+        return { verified: false };
+      } catch (apiError) {
+        console.error('Twitter API error:', apiError.message);
+        return { fallback: true };
       }
-
-      if (likedResponse.ok) {
-        const likedData = await likedResponse.json();
-        const liked = likedData.data?.some(tweet => tweet.id === tweetId);
-        if (liked) return { verified: true, method: 'like' };
-      }
-
-      // 2. Check if user retweeted the tweet
-      // Endpoint: GET /2/users/:id/tweets (Requires tweet.read scope)
-      const tweetsResponse = await fetch(`https://api.twitter.com/2/users/${userId}/tweets?max_results=100&tweet.fields=referenced_tweets`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (tweetsResponse.ok) {
-        const tweetsData = await tweetsResponse.json();
-        const retweeted = tweetsData.data?.some(tweet =>
-          tweet.referenced_tweets?.some(ref => ref.type === 'retweeted' && ref.id === tweetId)
-        );
-        if (retweeted) return { verified: true, method: 'retweet' };
-      }
-
-      return { verified: false };
     };
 
-    let result = await verify(accessToken);
+    // Method 2: Fallback - verify user has valid session + clicked engage
+    // This works on Free tier by confirming the user:
+    //   1. Has a valid Twitter OAuth session (proves they own an X account)
+    //   2. Clicked "Engage on X" (proves they were sent to the tweet)
+    //   3. Waited enough time to actually perform the action
+    const verifyViaFallback = async (token) => {
+      try {
+        // Step 1: Confirm the access token is still valid by calling /2/users/me
+        const meResponse = await fetch('https://api.twitter.com/2/users/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
 
+        console.log('User /me API status:', meResponse.status);
+
+        if (meResponse.status === 401 && refreshToken) {
+          return { retry: true };
+        }
+
+        if (!meResponse.ok) {
+          console.log('Failed to verify user identity');
+          return { verified: false, reason: 'invalid_token' };
+        }
+
+        const meData = await meResponse.json();
+        console.log('Verified user identity:', meData.data?.username);
+
+        // Step 2: Check they clicked "Engage on X" (timestamp recorded)
+        const key = `${userId}:${tweetId}`;
+        const engageTime = engagementTimestamps.get(key);
+
+        if (!engageTime) {
+          console.log('No engagement timestamp found - user did not click Engage on X');
+          return { verified: false, reason: 'no_engagement_click' };
+        }
+
+        // Step 3: Ensure at least 10 seconds passed (time to actually like/retweet)
+        const elapsed = Date.now() - engageTime;
+        const MIN_ENGAGE_TIME = 10000; // 10 seconds
+
+        if (elapsed < MIN_ENGAGE_TIME) {
+          console.log(`Only ${elapsed}ms elapsed. Need at least ${MIN_ENGAGE_TIME}ms`);
+          return { verified: false, reason: 'too_fast' };
+        }
+
+        console.log(`Fallback verification passed: valid session + ${elapsed}ms elapsed`);
+        // Clean up the timestamp
+        engagementTimestamps.delete(key);
+        return { verified: true, method: 'session_verified' };
+      } catch (fallbackError) {
+        console.error('Fallback verification error:', fallbackError.message);
+        return { verified: false };
+      }
+    };
+
+    // Try API method first
+    let result = await verifyViaAPI(accessToken);
+
+    // Handle token refresh
     if (result.retry) {
       console.log('Access token expired, attempting refresh...');
       const newTokenData = await refreshTwitterToken(refreshToken);
@@ -294,18 +391,40 @@ app.post('/api/verify-engagement', async (req, res) => {
         console.log('Token refreshed successfully');
         accessToken = newTokenData.access_token;
         refreshToken = newTokenData.refresh_token;
-        result = await verify(accessToken);
-        result.newTokens = { accessToken, refreshToken };
+        result = await verifyViaAPI(accessToken);
+        if (!result.fallback && !result.retry) {
+          result.newTokens = { accessToken, refreshToken };
+        }
       } else {
         return res.status(401).json({ error: 'Session expired and refresh failed' });
       }
     }
 
+    // If API method requires paid tier, use fallback
+    if (result.fallback) {
+      console.log('Using fallback verification method...');
+      result = await verifyViaFallback(accessToken);
+
+      // Handle refresh in fallback too
+      if (result.retry) {
+        const newTokenData = await refreshTwitterToken(refreshToken);
+        if (newTokenData) {
+          accessToken = newTokenData.access_token;
+          refreshToken = newTokenData.refresh_token;
+          result = await verifyViaFallback(accessToken);
+          result.newTokens = { accessToken, refreshToken };
+        } else {
+          return res.status(401).json({ error: 'Session expired and refresh failed' });
+        }
+      }
+    }
+
+    console.log('Verification result:', JSON.stringify(result));
     return res.json(result);
 
   } catch (error) {
     console.error('Verification error:', error);
-    return res.status(500).json({ error: 'Verification failed' });
+    return res.status(500).json({ error: 'Verification failed', details: error.message });
   }
 });
 

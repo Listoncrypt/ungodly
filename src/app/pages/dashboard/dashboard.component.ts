@@ -199,6 +199,17 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('Opening X (Twitter)...', task.post_link);
     window.open(task.post_link || 'https://x.com', '_blank');
     this.verifyingTaskId = task.id;
+
+    // Record engagement start time on the backend for verification
+    const tweetId = this.extractTweetId(task.post_link || '');
+    const twitterUserId = localStorage.getItem('twitter_user_id');
+    if (tweetId && twitterUserId) {
+      fetch(`${environment.backendUrl}/api/record-engagement`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tweetId, userId: twitterUserId })
+      }).catch(err => console.error('Failed to record engagement:', err));
+    }
   }
 
   async reconnectTwitter() {
@@ -223,13 +234,19 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     const result = await this.verifyEngagement(tweetId);
 
     if (result === 'missing_auth') {
-      alert('Your Twitter session has expired. Please log out and log back in with Twitter to continue earning.');
+      alert('Your Twitter session has expired. Please tap "Connect Account" to reconnect your X account.');
+      this.verifyingTaskId = null;
+      return;
+    }
+
+    if (result === 'too_fast') {
+      alert('Please wait a moment after engaging with the post before verifying. Make sure you liked or retweeted the tweet first!');
       this.verifyingTaskId = null;
       return;
     }
 
     if (!result) {
-      alert('Engagement verification failed. Please make sure you liked or retweeted the post to earn rewards.');
+      alert('Engagement verification failed. Please click "Engage on X" first, like or retweet the post, then come back and click "Verify".');
       this.verifyingTaskId = null;
       return;
     }
@@ -374,6 +391,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       }
 
+      // Return specific reasons for better user feedback
+      if (result.reason === 'too_fast') return 'too_fast';
+      if (result.reason === 'no_engagement_click') return false;
+      
       return result.verified;
     } catch (error) {
       console.error('Verification failed:', error);
