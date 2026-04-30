@@ -105,7 +105,6 @@ export class LandingComponent implements AfterViewInit, OnDestroy, OnInit {
   }
 
   onLearnMore() {
-    // Placeholder for future update
-    alert('Learn More feature coming soon!');
+    window.open('https://x.com/i/status/2049839895510687845', '_blank');
   }
 }

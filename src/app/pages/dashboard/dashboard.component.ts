@@ -242,7 +242,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   engageOnX(task: PlatformTask) {
-    if (!this.hasTwitterSession) {
+    // Admins can view tasks freely without needing a Twitter session
+    if (!this.hasTwitterSession && !this.isAdmin) {
       alert('Please connect your X account first!');
       return;
     }
