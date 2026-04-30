@@ -1,40 +1,23 @@
 <div class="min-h-screen bg-gray-50">
   <!-- Header -->
-  <header
-    class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200"
-  >
+  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
       <div class="flex items-center justify-between">
         <!-- Logo -->
-        <a
-          routerLink="/"
-          class="inline-flex items-center gap-2 sm:gap-3 flex-shrink-0"
-        >
-          <img
-            src="assets/ee41a994-c564-489f-a071-3fae7d4bf7bb.png"
-            alt="UNGODLY ACHV"
-            class="h-12 w-auto object-contain"
-          />
+        <a routerLink="/" class="inline-flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <img src="assets/ee41a994-c564-489f-a071-3fae7d4bf7bb.png" alt="UNGODLY ACHV"
+            class="h-12 w-auto object-contain" />
         </a>
 
         <!-- Desktop Navigation -->
         <nav class="hidden md:flex items-center gap-8 text-sm text-gray-600">
-          <button
-            (click)="scrollToSection('features')"
-            class="hover:text-gray-900 transition-colors font-medium"
-          >
+          <button (click)="scrollToSection('features')" class="hover:text-gray-900 transition-colors font-medium">
             Services
           </button>
-          <button
-            (click)="scrollToSection('partners')"
-            class="hover:text-gray-900 transition-colors font-medium"
-          >
+          <button (click)="scrollToSection('partners')" class="hover:text-gray-900 transition-colors font-medium">
             Become a Partner
           </button>
-          <button
-            (click)="openBookMeetModal()"
-            class="hover:text-gray-900 transition-colors font-medium"
-          >
+          <button (click)="openBookMeetModal()" class="hover:text-gray-900 transition-colors font-medium">
             Book a Meet
           </button>
           <!-- <a
@@ -53,96 +36,55 @@
 
         <!-- CTA Button & Mobile Menu -->
         <div class="flex items-center gap-4">
-          <button
-            (click)="onBecomeAgent()"
-            class="hidden sm:inline-flex px-6 py-2 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
-          >
+          <button (click)="onBecomeAgent()"
+            class="hidden sm:inline-flex px-6 py-2 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-colors">
             Become An Agent
           </button>
-          <button
-            (click)="toggleMobileMenu()"
+          <button (click)="toggleMobileMenu()"
             class="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-            aria-label="Toggle menu"
-          >
-            <svg
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                *ngIf="!isMobileMenuOpen"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 6h16M4 12h16M4 18h16"
-              ></path>
-              <path
-                *ngIf="isMobileMenuOpen"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              ></path>
+            aria-label="Toggle menu">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path *ngIf="!isMobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16"></path>
+              <path *ngIf="isMobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
         </div>
       </div>
 
       <!-- Mobile Navigation -->
-      <nav
-        *ngIf="isMobileMenuOpen"
-        class="md:hidden mt-4 pt-4 border-t border-gray-200 space-y-2"
-      >
-        <button
-          (click)="scrollToSection('features'); closeMobileMenu()"
-          class="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
-        >
+      <nav *ngIf="isMobileMenuOpen" class="md:hidden mt-4 pt-4 border-t border-gray-200 space-y-2">
+        <button (click)="scrollToSection('features'); closeMobileMenu()"
+          class="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium">
           Services
         </button>
-        <button
-          (click)="scrollToSection('partners'); closeMobileMenu()"
-          class="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
-        >
+        <button (click)="scrollToSection('partners'); closeMobileMenu()"
+          class="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium">
           Become a Partner
         </button>
-        <button
-          (click)="openBookMeetModal(); closeMobileMenu()"
-          class="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium"
-        >
+        <button (click)="openBookMeetModal(); closeMobileMenu()"
+          class="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-medium">
           Book a Meet
         </button>
-         <a
-          *ngIf="isAdmin"
-          routerLink="/admin-dashboard"
-          (click)="closeMobileMenu()"
-          class="block px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-bold"
-        >
+        <a *ngIf="isAdmin" routerLink="/admin-dashboard" (click)="closeMobileMenu()"
+          class="block px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-bold">
           Admin Portal
         </a>
-        <a
-          *ngIf="isLoggedIn"
-          routerLink="/dashboard"
-          (click)="closeMobileMenu()"
-          class="block px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-bold"
-        >
+        <a *ngIf="isLoggedIn" routerLink="/dashboard" (click)="closeMobileMenu()"
+          class="block px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-bold">
           Dashboard
         </a>
-        <a
-          *ngIf="!isLoggedIn"
-          routerLink="/login"
-          (click)="closeMobileMenu()"
-          class="flex items-center gap-2 px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-bold"
-        >
+        <a *ngIf="!isLoggedIn" routerLink="/login" (click)="closeMobileMenu()"
+          class="flex items-center gap-2 px-3 py-2 text-gray-900 hover:bg-gray-50 rounded-md transition-colors font-bold">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
           Login
         </a>
-        <button
-          (click)="onBecomeAgent(); closeMobileMenu()"
-          class="w-full mt-4 px-6 py-2 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
-        >
+        <button (click)="onBecomeAgent(); closeMobileMenu()"
+          class="w-full mt-4 px-6 py-2 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-colors">
           Become An Agent
         </button>
       </nav>
@@ -152,36 +94,32 @@
   <!-- Hero Section -->
   <section class="relative py-20 px-4 sm:px-6 lg:px-8">
     <div class="max-w-4xl mx-auto text-center hero-reveal">
-      <h1
-        class="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900 mb-6 leading-tight"
-      >
+      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900 mb-6 leading-tight">
         Introducing<br />UNGODLY ACHV
       </h1>
-      <p
-        class="text-lg sm:text-xl text-gray-800 mb-10 max-w-3xl mx-auto leading-loose font-black"
-      >
+      <p class="text-lg sm:text-xl text-gray-800 mb-10 max-w-3xl mx-auto leading-loose font-black">
         <span class="block mb-4">The smartest way for Web3 projects to grow organically on X</span>
-        <span class="block mb-4">Tired of paying for fake impressions, bot followers, and engagement that brings no real users or volume?</span>
-        <span>Ungodly ACHV is the first fully automated platform built exclusively for Web3 that helps your Project reach and engage real audiences on X in a completely natural, organic way</span>
+        <span class="block mb-4">Tired of paying for fake impressions, bot followers, and engagement that brings no real
+          users or volume?</span>
+        <span>Ungodly ACHV is the first fully automated platform built exclusively for Web3 that helps your Project
+          reach and engage real audiences on X in a completely natural, organic way</span>
       </p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a
-          href="https://t.me/Ungodlyachvportfolio"
-          target="_blank"
-          class="flex-1 sm:flex-none px-8 py-3 bg-white text-gray-900 font-bold rounded-xl border-2 border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-all text-lg shadow-sm flex items-center justify-center gap-2"
-        >
+        <a href="https://t.me/Ungodlyachvportfolio" target="_blank"
+          class="flex-1 sm:flex-none px-8 py-3 bg-white text-gray-900 font-bold rounded-xl border-2 border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-all text-lg shadow-sm flex items-center justify-center gap-2">
           <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
           </svg>
           View Results
         </a>
-        <button
-          (click)="onLearnMore()"
-          class="flex-1 sm:flex-none px-8 py-3 bg-gray-50 text-gray-500 font-bold rounded-xl border-2 border-transparent hover:bg-gray-100 transition-all text-lg flex items-center justify-center gap-2"
-        >
+        <button (click)="onLearnMore()"
+          class="flex-1 sm:flex-none px-8 py-3 bg-gray-50 text-gray-500 font-bold rounded-xl border-2 border-transparent hover:bg-gray-100 transition-all text-lg flex items-center justify-center gap-2">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           Learn More
         </button>
@@ -192,16 +130,12 @@
   <!-- Features Section -->
   <section id="features" class="py-20 px-4 sm:px-6 lg:px-8 bg-white reveal-section">
     <div class="max-w-6xl mx-auto">
-      <h2
-        class="text-3xl sm:text-4xl font-black text-gray-900 mb-12 text-center"
-      >
+      <h2 class="text-3xl sm:text-4xl font-black text-gray-900 mb-12 text-center">
         Our Services
       </h2>
       <div class="grid md:grid-cols-3 gap-8">
         <!-- Feature 1 -->
-        <div
-          class="p-8 border border-gray-200 rounded-lg hover:shadow-lg transition-shadow"
-        >
+        <div class="p-8 border border-gray-200 rounded-lg hover:shadow-lg transition-shadow">
           <h3 class="text-xl font-bold text-gray-900 mb-3">Advisory</h3>
           <p class="text-gray-600">
             TGE and launch campaigns
@@ -209,9 +143,7 @@
         </div>
 
         <!-- Feature 2 -->
-        <div
-          class="p-8 border border-gray-200 rounded-lg hover:shadow-lg transition-shadow"
-        >
+        <div class="p-8 border border-gray-200 rounded-lg hover:shadow-lg transition-shadow">
           <h3 class="text-xl font-bold text-gray-900 mb-3">AOE Update</h3>
           <p class="text-gray-600">
             Auto Organic Engagement powered by advanced algorithms. <br />
@@ -221,9 +153,7 @@
         </div>
 
         <!-- Feature 3 -->
-        <div
-          class="p-8 border border-gray-200 rounded-lg hover:shadow-lg transition-shadow"
-        >
+        <div class="p-8 border border-gray-200 rounded-lg hover:shadow-lg transition-shadow">
           <h3 class="text-xl font-bold text-gray-900 mb-3">Reach</h3>
           <p class="text-gray-600">
             When giving protocols visibility, we don't just give real users impressions. <br />
@@ -246,11 +176,8 @@
         opportunities, and priority support.
       </p>
       <div class="flex items-center justify-center gap-4">
-        <a
-          href="https://t.me/Iamhimtrueraver"
-          target="_blank"
-          class="inline-flex items-center justify-center px-10 py-4 bg-gray-900 text-white font-bold rounded-2xl hover:bg-gray-800 transition-all shadow-xl shadow-gray-200 active:scale-[0.98]"
-        >
+        <a href="https://t.me/Iamhimtrueraver" target="_blank"
+          class="inline-flex items-center justify-center px-10 py-4 bg-gray-900 text-white font-bold rounded-2xl hover:bg-gray-800 transition-all shadow-xl shadow-gray-200 active:scale-[0.98]">
           Contact Team
         </a>
         <!-- <button
@@ -266,19 +193,14 @@
   <!-- Partners Section -->
   <section class="py-20 px-4 sm:px-6 lg:px-8 bg-white reveal-section">
     <div class="max-w-6xl mx-auto">
-      <h2
-        class="text-3xl sm:text-4xl font-black text-gray-900 mb-12 text-center"
-      >
+      <h2 class="text-3xl sm:text-4xl font-black text-gray-900 mb-12 text-center">
         Our Partners
       </h2>
       <div class="flex flex-wrap items-center justify-center gap-12">
         <!-- Perpgame Partner -->
         <div class="flex flex-col items-center justify-center group cursor-pointer">
-          <img
-            src="assets/perpgame.png"
-            alt="Perpgame"
-            class="h-16 w-auto object-contain group-hover:scale-110 transition-transform duration-300 mb-3"
-          />
+          <img src="assets/perpgame.png" alt="Perpgame"
+            class="h-16 w-auto object-contain group-hover:scale-110 transition-transform duration-300 mb-3" />
           <span class="text-lg font-bold text-gray-800">Perpgame</span>
         </div>
         <!-- Add more partners as needed -->
@@ -299,15 +221,8 @@
             hacking.
           </p>
           <div class="flex gap-4 mt-6">
-            <a
-              href="https://x.com/AchvUngodly"
-              class="text-slate-400 hover:text-white transition-colors"
-              >Twitter</a
-            ><a
-              href="#"
-              class="text-slate-400 hover:text-white transition-colors"
-              >Discord</a
-            >
+            <a href="https://x.com/AchvUngodly" class="text-slate-400 hover:text-white transition-colors">Twitter</a><a
+              href="#" class="text-slate-400 hover:text-white transition-colors">Discord</a>
             <!-- <button
               (click)="joinTelegram()"
               class="text-gray-400 hover:text-white transition-colors text-sm font-medium"
@@ -317,16 +232,15 @@
           </div>
         </div>
       </div>
-      <div
-        class="border-t border-gray-700 pt-8 text-center text-sm text-gray-400"
-      >
+      <div class="border-t border-gray-700 pt-8 text-center text-sm text-gray-400">
         <p>&copy; 2026 UNGODLY ACHV. All rights reserved.</p>
       </div>
     </div>
   </footer>
 
   <!-- Book a Meet Modal -->
-  <div *ngIf="isBookMeetModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+  <div *ngIf="isBookMeetModalOpen"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
       <div class="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
         <h3 class="text-2xl font-black text-gray-900">Book a Meet</h3>
@@ -339,17 +253,16 @@
       <div class="p-8 text-center">
         <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+            </path>
           </svg>
         </div>
         <p class="text-gray-600 font-medium mb-8 leading-relaxed">
           Send over your projects info through our partnership mail a team member of ours would follow up.
         </p>
-        <a 
-          href="mailto:contact@ungodly.achv?subject=Book a Meet"
-          (click)="closeBookMeetModal()"
-          class="block w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-4 rounded-2xl transition-all shadow-lg hover:shadow-gray-200 text-center"
-        >
+        <a href="mailto:Ungodlyachv@gmail.com?subject=Book a Meet" (click)="closeBookMeetModal()"
+          class="block w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-4 rounded-2xl transition-all shadow-lg hover:shadow-gray-200 text-center">
           Book
         </a>
       </div>
