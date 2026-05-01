@@ -108,8 +108,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (error === 'insufficient_followers') {
-      const count = params.get('count') || '0';
-      alert(`Account Rejected: Your X account only has ${count} followers. You must have at least 1,000 followers to use this platform.`);
+      alert('Insufficient Followers — You must have up to 1k followers for signup.');
       window.history.replaceState({}, document.title, window.location.pathname);
       return;
     }

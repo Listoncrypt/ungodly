@@ -43,7 +43,11 @@ export class SignupComponent implements OnInit {
     const details = params.get('details');
     
     if (error) {
-      this.error = decodeURIComponent(details || error);
+      if (error === 'insufficient_followers') {
+        this.error = 'Insufficient Followers — You must have up to 1k followers for signup.';
+      } else {
+        this.error = decodeURIComponent(details || error);
+      }
       this.twitterVerified = false;
       window.history.replaceState({}, document.title, window.location.pathname);
       return;
