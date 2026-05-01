@@ -145,10 +145,20 @@ export class SupabaseService {
       .from('profiles')
       .select('*')
       .eq('role', 'user')
+      .eq('is_approved', true)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data as Profile[];
+
+    // Deduplicate by id just in case
+    const seen = new Set();
+    const unique = (data as Profile[]).filter(u => {
+      if (seen.has(u.id)) return false;
+      seen.add(u.id);
+      return true;
+    });
+
+    return unique;
   }
 
   async fixLegacyBalances() {
