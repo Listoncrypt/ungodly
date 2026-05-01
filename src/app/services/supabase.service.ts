@@ -289,28 +289,31 @@ export class SupabaseService {
     return { success: true };
   }
 
-  async getCompletedTasks(userId: string) {
+  async getCompletedTasks(userId: string): Promise<string[]> {
     const { data, error } = await this.supabase
       .from('user_tasks')
       .select('task_id')
       .eq('user_id', userId);
     
-    if (error) throw error;
-    return data.map(item => item.task_id);
+    if (error) {
+      console.warn('Could not fetch completed tasks:', error);
+      return [];
+    }
+    return (data || []).map((item: any) => item.task_id);
   }
 
   async getFullCompletedTasks(userId: string) {
     const { data, error } = await this.supabase
       .from('user_tasks')
-      .select(`
-        *,
-        tasks (*)
-      `)
+      .select('*, task:task_id(*)')
       .eq('user_id', userId)
       .order('completed_at', { ascending: false });
     
-    if (error) throw error;
-    return data;
+    if (error) {
+      console.warn('Could not fetch full completed tasks:', error);
+      return [];
+    }
+    return data || [];
   }
 
   async profileExists(userId: string): Promise<boolean> {
