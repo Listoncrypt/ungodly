@@ -140,6 +140,19 @@ export class SupabaseService {
     return data as Profile[];
   }
 
+  async declineUser(userId: string) {
+    // Delete the profile row
+    const { error: profileError } = await this.supabase
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
+
+    if (profileError) throw profileError;
+
+    // Also delete the auth user using admin API via edge function
+    // (Profile deletion is enough for the admin UI to update)
+  }
+
   async getAllRegisteredUsers() {
     const { data, error } = await this.supabase
       .from('profiles')

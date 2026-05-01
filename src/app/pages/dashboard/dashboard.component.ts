@@ -131,6 +131,23 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         this.isAdmin = user.role === 'admin';
         this.userInitial = this.username.charAt(0).toUpperCase();
 
+        // Always fetch fresh balance directly from DB to ensure it's up to date
+        try {
+          const { data: freshProfile } = await this.supabase.client
+            .from('profiles')
+            .select('balance, total_earned, tasks_completed')
+            .eq('id', user.id)
+            .single();
+          if (freshProfile) {
+            this.balance = freshProfile.balance || 0.0;
+            this.earnings = freshProfile.total_earned || 0.0;
+            this.tasksComplete = freshProfile.tasks_completed || 0;
+          }
+        } catch (e) {
+          console.warn('Could not refresh balance from DB', e);
+        }
+
+
         // Load tasks and filter them
         try {
           // 1. Get completed task IDs (Gracefully handle missing table)
