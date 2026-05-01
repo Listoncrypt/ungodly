@@ -32,6 +32,8 @@ const port = 3001;
 // CORS: Allow requests from your Vercel frontend
 app.use(cors({
   origin: [
+    'https://ungodlyachv.com',
+    'https://www.ungodlyachv.com',
     'https://ungodly-pi.vercel.app',
     /\.vercel\.app$/,
     'http://localhost:4200',
@@ -42,6 +44,19 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+
+// ============================
+// Keep-alive endpoints
+// UptimeRobot should ping /ping every 5 minutes to prevent Render from sleeping
+// ============================
+app.get('/ping', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'Server is awake', timestamp: new Date().toISOString() });
+});
+
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'healthy', uptime: process.uptime(), timestamp: new Date().toISOString() });
+});
+
 
 // Twitter OAuth credentials from environment variables
 const TWITTER_CLIENT_ID = process.env.TWITTER_CLIENT_ID;
