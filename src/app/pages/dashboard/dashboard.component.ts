@@ -150,14 +150,19 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // Load tasks and filter them
         try {
-          // 1. Get completed task IDs (Gracefully handle missing table)
+          // 1. Get completed task IDs — query directly from DB for reliability
           let completedIds: string[] = [];
           try {
-            completedIds = await this.supabase.getCompletedTasks(user.id);
+            const { data: userTasksData } = await this.supabase.client
+              .from('user_tasks')
+              .select('task_id')
+              .eq('user_id', user.id);
+            completedIds = (userTasksData || []).map((r: any) => r.task_id);
           } catch (e) {
-            console.warn('[Dashboard] user_tasks table might be missing. Skipping filter.', e);
+            console.warn('[Dashboard] Could not load completed task IDs.', e);
           }
           this.completedTaskIds = new Set(completedIds);
+          console.log(`[Dashboard] Completed task IDs loaded: ${completedIds.length}`);
 
           // 2. Load all tasks
           const tasks = await this.supabase.getTasks();
@@ -165,11 +170,16 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           // 3. Filter: Only show tasks the user HAS NOT done yet
           this.engagementTasks = tasks.filter(t => !this.completedTaskIds.has(t.id));
 
-          // 4. Load full details for performed tasks tab (Gracefully handle missing table)
+          // 4. Load full details for performed tasks tab
           try {
-            this.performedTasks = await this.supabase.getFullCompletedTasks(user.id);
+            const { data: performed } = await this.supabase.client
+              .from('user_tasks')
+              .select('*, task:task_id(*)')
+              .eq('user_id', user.id)
+              .order('completed_at', { ascending: false });
+            this.performedTasks = performed || [];
           } catch (e) {
-            console.warn('[Dashboard] Could not load performed tasks details.', e);
+            console.warn('[Dashboard] Could not load performed tasks.', e);
             this.performedTasks = [];
           }
 
@@ -369,11 +379,22 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         return;
       }
 
-      console.log('[Verify] Completion recorded. Updating profile balance...');
+      console.log('[Verify] Completion recorded. Fetching fresh balance from DB...');
 
-      const newBalance = (currentUser.balance || 0) + totalReward;
-      const newTotalEarned = (currentUser.total_earned || 0) + totalReward;
-      const newTasksCount = (currentUser.tasks_completed || 0) + 1;
+      // Always fetch latest balance from DB to avoid stale-cache discrepancies
+      const { data: freshProfile } = await this.supabase.client
+        .from('profiles')
+        .select('balance, total_earned, tasks_completed')
+        .eq('id', currentUser.id)
+        .single();
+
+      const currentBalance = freshProfile?.balance ?? 0;
+      const currentTotalEarned = freshProfile?.total_earned ?? 0;
+      const currentTasksCount = freshProfile?.tasks_completed ?? 0;
+
+      const newBalance = currentBalance + totalReward;
+      const newTotalEarned = currentTotalEarned + totalReward;
+      const newTasksCount = currentTasksCount + 1;
 
       await this.supabase.updateProfile(currentUser.id, {
         balance: newBalance,
@@ -382,6 +403,11 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       });
 
       console.log(`[Verify] Profile updated: New Balance $${newBalance}`);
+
+      // Update local display immediately so UI reflects change without reload
+      this.balance = newBalance;
+      this.earnings = newTotalEarned;
+      this.tasksComplete = newTasksCount;
 
       this.engagementTasks = this.engagementTasks.filter(t => t.id !== task.id);
       this.completedTaskIds.add(task.id);
