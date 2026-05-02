@@ -470,7 +470,7 @@
                 <div>
                   <p class="font-bold text-gray-900 text-sm">{{ sub.profile?.email }}</p>
                   <p class="text-xs text-gray-500 mt-0.5">
-                    <span *ngIf="sub.profile?.twitter_handle">@{{ sub.profile.twitter_handle }} · </span>
+                    <span *ngIf="sub.profile?.twitter_handle">{{ '@' + sub.profile.twitter_handle }} · </span>
                     {{ sub.submitted_at | date:'MMM d, y' }}
                   </p>
                 </div>
