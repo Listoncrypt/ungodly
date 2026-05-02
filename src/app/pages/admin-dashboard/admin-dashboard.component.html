@@ -436,6 +436,68 @@
 
       </div>
     </section>
+    <!-- TAB: Reviews (Screenshot Submissions) -->
+    <section *ngIf="activeTab === 'reviews'" class="tab-content">
+      <div class="mb-5 flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-900">Pending Screenshot Reviews</h3>
+        <span class="text-xs font-semibold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
+          {{ pendingSubmissions.length }} pending
+        </span>
+      </div>
 
+      <div *ngIf="loadingSubmissions" class="flex items-center justify-center py-16">
+        <div class="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-gray-900"></div>
+      </div>
+
+      <div *ngIf="!loadingSubmissions && pendingSubmissions.length === 0" class="bg-white rounded-xl border border-gray-200 p-12 text-center">
+        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <p class="text-gray-500 font-medium">No pending reviews.</p>
+        <p class="text-gray-400 text-sm mt-1">Screenshot submissions will appear here.</p>
+      </div>
+
+      <div *ngIf="!loadingSubmissions && pendingSubmissions.length > 0" class="space-y-4">
+        <div *ngFor="let sub of pendingSubmissions" class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-all">
+          <div class="flex flex-col sm:flex-row gap-4">
+            <a [href]="sub.screenshot_url" target="_blank" class="flex-shrink-0">
+              <img [src]="sub.screenshot_url" alt="Proof screenshot" class="w-full sm:w-40 h-32 object-cover rounded-xl border border-gray-200 hover:opacity-90 transition-opacity cursor-zoom-in"/>
+            </a>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between gap-2 mb-3">
+                <div>
+                  <p class="font-bold text-gray-900 text-sm">{{ sub.profile?.email }}</p>
+                  <p class="text-xs text-gray-500 mt-0.5">
+                    <span *ngIf="sub.profile?.twitter_handle">@{{ sub.profile.twitter_handle }} &middot; </span>
+                    {{ sub.submitted_at | date:'MMM d, y' }}
+                  </p>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full flex-shrink-0">
+                  <span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                  Pending
+                </span>
+              </div>
+              <div class="bg-gray-50 rounded-lg p-3 mb-4">
+                <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-0.5">Task</p>
+                <p class="text-sm font-bold text-gray-900">{{ sub.task?.title || 'Unknown Task' }}</p>
+                <p class="text-xs text-green-700 font-semibold mt-1">Reward: ${{ sub.reward_amount }}</p>
+              </div>
+              <div class="flex gap-2">
+                <button (click)="approveSubmission(sub)" class="flex-1 py-2.5 bg-gray-900 hover:bg-gray-700 text-white text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  Approve and Pay
+                </button>
+                <button (click)="rejectSubmission(sub)" class="flex-1 py-2.5 bg-white hover:bg-red-50 text-red-600 text-sm font-bold rounded-lg border border-red-200 hover:border-red-300 transition-colors flex items-center justify-center gap-1.5">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  Reject
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </div>

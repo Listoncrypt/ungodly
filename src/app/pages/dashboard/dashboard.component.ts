@@ -46,8 +46,14 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   activeTab: 'available' | 'performed' = 'available';
   performedTasks: any[] = [];
   completedTaskIds: Set<string> = new Set();
+  pendingTaskIds: Set<string> = new Set(); // Tasks submitted but not yet reviewed
 
-  // Timer tracking
+  // Screenshot submission
+  verifyingTaskId: string | null = null;
+  selectedFiles: { [taskId: string]: File } = {};
+  uploadingTask: string | null = null;
+
+  // Timer tracking (kept for engageOnX delay only)
   taskTimers: { [taskId: string]: number } = {};
   private timerIntervals: { [taskId: string]: any } = {};
 
@@ -150,7 +156,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // Load tasks and filter them
         try {
-          // 1. Get completed task IDs — query directly from DB for reliability
+          // 1. Get completed task IDs from user_tasks (approved)
           let completedIds: string[] = [];
           try {
             const { data: userTasksData } = await this.supabase.client
@@ -161,16 +167,29 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           } catch (e) {
             console.warn('[Dashboard] Could not load completed task IDs.', e);
           }
+
+          // 2. Also load task_submissions to find pending and approved screenshot submissions
+          try {
+            const { data: submissions } = await this.supabase.client
+              .from('task_submissions')
+              .select('task_id, status')
+              .eq('user_id', user.id);
+            const approvedIds = (submissions || []).filter((s: any) => s.status === 'approved').map((s: any) => s.task_id);
+            const pendingIds = (submissions || []).filter((s: any) => s.status === 'pending').map((s: any) => s.task_id);
+            completedIds = [...new Set([...completedIds, ...approvedIds])];
+            this.pendingTaskIds = new Set(pendingIds);
+          } catch (e) {
+            console.warn('[Dashboard] Could not load task submissions.', e);
+          }
+
           this.completedTaskIds = new Set(completedIds);
-          console.log(`[Dashboard] Completed task IDs loaded: ${completedIds.length}`);
+          console.log(`[Dashboard] Completed: ${completedIds.length}, Pending review: ${this.pendingTaskIds.size}`);
 
-          // 2. Load all tasks
+          // 3. Load all tasks and filter out completed/pending
           const tasks = await this.supabase.getTasks();
-          
-          // 3. Filter: Only show tasks the user HAS NOT done yet
-          this.engagementTasks = tasks.filter(t => !this.completedTaskIds.has(t.id));
+          this.engagementTasks = tasks.filter(t => !this.completedTaskIds.has(t.id) && !this.pendingTaskIds.has(t.id));
 
-          // 4. Load full details for performed tasks tab
+          // 4. Load performed tasks
           try {
             const { data: performed } = await this.supabase.client
               .from('user_tasks')
@@ -274,35 +293,96 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    console.log('Opening X (Twitter)...', task.post_link);
+    // Open the post and show screenshot upload UI
     window.open(task.post_link || 'https://x.com', '_blank');
-    
     this.verifyingTaskId = task.id;
-    this.taskTimers[task.id] = 25; // 25 second timer
+  }
 
-    // Start countdown
-    if (this.timerIntervals[task.id]) clearInterval(this.timerIntervals[task.id]);
-    
-    this.timerIntervals[task.id] = setInterval(() => {
-      if (this.taskTimers[task.id] > 0) {
-        this.taskTimers[task.id]--;
-      } else {
-        clearInterval(this.timerIntervals[task.id]);
+  onFileSelected(event: Event, taskId: string) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      if (!file.type.startsWith('image/')) {
+        alert('Only image files are allowed. Please upload a screenshot.');
+        return;
       }
-    }, 1000);
-
-    // Record engagement start time on the backend
-    const tweetId = this.extractTweetId(task.post_link || '');
-    const twitterUserId = localStorage.getItem('twitter_user_id');
-    if (tweetId && twitterUserId) {
-      fetch(`${environment.backendUrl}/api/record-engagement`, {
-        // ... (rest same as before)
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tweetId, userId: twitterUserId })
-      }).catch(err => console.error('Failed to record engagement:', err));
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image must be under 5MB.');
+        return;
+      }
+      this.selectedFiles[taskId] = file;
     }
   }
+
+  async submitProof(task: PlatformTask) {
+    const file = this.selectedFiles[task.id];
+    if (!file) {
+      alert('Please select a screenshot to upload first.');
+      return;
+    }
+
+    const currentUser = await this.authService.currentUser$.pipe(take(1)).toPromise();
+    if (!currentUser) {
+      alert('Not authenticated. Please log in again.');
+      return;
+    }
+
+    this.uploadingTask = task.id;
+
+    try {
+      // 1. Upload image to Supabase storage
+      const fileExt = file.name.split('.').pop() || 'png';
+      const fileName = `${currentUser.id}_${task.id}_${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await this.supabase.client.storage
+        .from('screenshots')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // 2. Get public URL
+      const { data: urlData } = this.supabase.client.storage
+        .from('screenshots')
+        .getPublicUrl(fileName);
+
+      const screenshotUrl = urlData.publicUrl;
+
+      // 3. Insert into task_submissions
+      const { error: insertError } = await this.supabase.client
+        .from('task_submissions')
+        .insert({
+          user_id: currentUser.id,
+          task_id: task.id,
+          twitter_handle: currentUser.twitterHandle || '',
+          screenshot_url: screenshotUrl,
+          reward_amount: task.reward,
+          status: 'pending'
+        });
+
+      if (insertError) {
+        if (insertError.code === '23505') {
+          alert('You have already submitted proof for this task. Please wait for admin review.');
+        } else {
+          throw insertError;
+        }
+        return;
+      }
+
+      // 4. Update local state
+      this.pendingTaskIds.add(task.id);
+      this.engagementTasks = this.engagementTasks.filter(t => t.id !== task.id);
+      this.verifyingTaskId = null;
+      delete this.selectedFiles[task.id];
+
+      alert('Proof submitted! Your screenshot is under review. You\'ll be rewarded once approved.');
+    } catch (err: any) {
+      console.error('[Submit Proof] Error:', err);
+      alert('Failed to submit proof: ' + (err.message || 'Unknown error'));
+    } finally {
+      this.uploadingTask = null;
+    }
+  }
+
 
   async reconnectTwitter() {
     try {

@@ -25,11 +25,15 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   activeTab = 'requests';
   totalPendingAmount = 0;
 
+  pendingSubmissions: any[] = [];
+  loadingSubmissions = true;
+
   tabs = [
     { id: 'requests', label: 'Requests', count: 0 },
     { id: 'registered', label: 'Users', count: 0 },
     { id: 'tasks', label: 'Tasks', count: 0 },
     { id: 'withdrawals', label: 'Withdrawals', count: 0 },
+    { id: 'reviews', label: 'Reviews', count: 0 },
   ];
 
   newTask = {
@@ -52,6 +56,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     this.loadWithdrawals();
     this.loadWithdrawalHistory();
     this.loadTasks();
+    this.loadPendingSubmissions();
   }
 
   ngAfterViewInit(): void {
@@ -84,7 +89,86 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     this.tabs[1].count = this.registeredUsers.length;
     this.tabs[2].count = this.existingTasks.length;
     this.tabs[3].count = this.pendingWithdrawals.length;
+    this.tabs[4].count = this.pendingSubmissions.length;
     this.totalPendingAmount = this.pendingWithdrawals.reduce((sum, w) => sum + (w.amount || 0), 0);
+  }
+
+  async loadPendingSubmissions() {
+    this.loadingSubmissions = true;
+    try {
+      const { data, error } = await this.supabase.client
+        .from('task_submissions')
+        .select('*, profile:user_id(email, twitter_handle), task:task_id(title, reward)')
+        .eq('status', 'pending')
+        .order('submitted_at', { ascending: false });
+      if (error) throw error;
+      this.pendingSubmissions = data || [];
+      this.updateTabCounts();
+    } catch (err) {
+      console.error('Error loading submissions:', err);
+    } finally {
+      this.loadingSubmissions = false;
+    }
+  }
+
+  async approveSubmission(submission: any) {
+    if (!confirm(`Approve this submission and pay $${submission.reward_amount} to ${submission.profile?.email}?`)) return;
+    try {
+      // 1. Mark submission as approved
+      const { error: subError } = await this.supabase.client
+        .from('task_submissions')
+        .update({ status: 'approved', reviewed_at: new Date().toISOString() })
+        .eq('id', submission.id);
+      if (subError) throw subError;
+
+      // 2. Fetch fresh user balance
+      const { data: profile } = await this.supabase.client
+        .from('profiles')
+        .select('balance, total_earned, tasks_completed')
+        .eq('id', submission.user_id)
+        .single();
+
+      const newBalance = (profile?.balance || 0) + submission.reward_amount;
+      const newEarned = (profile?.total_earned || 0) + submission.reward_amount;
+      const newTasks = (profile?.tasks_completed || 0) + 1;
+
+      // 3. Update user balance
+      const { error: profError } = await this.supabase.client
+        .from('profiles')
+        .update({ balance: newBalance, total_earned: newEarned, tasks_completed: newTasks })
+        .eq('id', submission.user_id);
+      if (profError) throw profError;
+
+      // 4. Record in user_tasks to mark as completed
+      await this.supabase.client
+        .from('user_tasks')
+        .insert({ user_id: submission.user_id, task_id: submission.task_id, reward_amount: submission.reward_amount })
+        .on('conflict', 'do nothing' as any);
+
+      this.pendingSubmissions = this.pendingSubmissions.filter(s => s.id !== submission.id);
+      this.updateTabCounts();
+      alert(`Approved! $${submission.reward_amount} added to user balance.`);
+    } catch (err: any) {
+      console.error('Error approving submission:', err);
+      alert('Failed to approve: ' + err.message);
+    }
+  }
+
+  async rejectSubmission(submission: any) {
+    if (!confirm(`Reject this submission from ${submission.profile?.email}?`)) return;
+    try {
+      const { error } = await this.supabase.client
+        .from('task_submissions')
+        .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
+        .eq('id', submission.id);
+      if (error) throw error;
+      this.pendingSubmissions = this.pendingSubmissions.filter(s => s.id !== submission.id);
+      this.updateTabCounts();
+      alert('Submission rejected.');
+    } catch (err: any) {
+      console.error('Error rejecting submission:', err);
+      alert('Failed to reject: ' + err.message);
+    }
   }
 
   async loadTasks() {
