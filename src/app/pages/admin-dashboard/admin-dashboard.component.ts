@@ -139,11 +139,12 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         .eq('id', submission.user_id);
       if (profError) throw profError;
 
-      // 4. Record in user_tasks to mark as completed
-      await this.supabase.client
-        .from('user_tasks')
-        .insert({ user_id: submission.user_id, task_id: submission.task_id, reward_amount: submission.reward_amount })
-        .on('conflict', 'do nothing' as any);
+      // 4. Record in user_tasks to mark as completed (ignore if already exists)
+      try {
+        await this.supabase.client
+          .from('user_tasks')
+          .insert({ user_id: submission.user_id, task_id: submission.task_id, reward_amount: submission.reward_amount });
+      } catch (_) { /* ignore duplicate */ }
 
       this.pendingSubmissions = this.pendingSubmissions.filter(s => s.id !== submission.id);
       this.updateTabCounts();

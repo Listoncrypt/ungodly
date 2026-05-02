@@ -276,8 +276,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  verifyingTaskId: string | null = null;
-
   async loadTasks() {
     try {
       this.engagementTasks = await this.supabase.getTasks();
