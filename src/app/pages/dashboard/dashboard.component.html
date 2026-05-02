@@ -58,7 +58,7 @@
           <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
               <p class="text-gray-400 text-sm font-medium mb-1">Available Balance</p>
-              <p class="text-4xl sm:text-5xl font-black tracking-tight">${{ balance.toFixed(2) }}</p>
+              <p class="text-4xl sm:text-5xl font-black tracking-tight">${{ (earnings - withdrawals).toFixed(2) }}</p>
             </div>
             <div class="flex items-center gap-6 text-sm">
               <div class="text-center">
@@ -111,7 +111,7 @@
         <p class="text-2xl font-black text-gray-900">{{ totalCreators | number }}</p>
         <p class="text-xs text-gray-400 font-medium mt-0.5">Creators</p>
       </div>
-      <div class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+      <div *ngIf="isAdmin" class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
         <div class="flex items-center gap-3 mb-3">
           <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
             <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,6 +122,7 @@
         <p class="text-2xl font-black text-gray-900">${{ totalPlatformEarnings | number:'1.2-2' }}</p>
         <p class="text-xs text-gray-400 font-medium mt-0.5">Platform Total</p>
       </div>
+
     </div>
 
     <!-- Twitter Connection Status (hidden for admins) -->

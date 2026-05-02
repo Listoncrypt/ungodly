@@ -218,14 +218,23 @@ export class SupabaseService {
   }
 
   async declineUser(userId: string) {
-    // Delete the profile row - this is sufficient to remove the user from the admin UI
+    // 1. Delete the profile row
     const { error } = await this.supabase
       .from('profiles')
       .delete()
       .eq('id', userId);
 
     if (error) throw error;
-    // Note: Auth account cleanup happens separately if needed
+
+    // 2. Delete auth account so the user cannot log back in and reappear
+    const { error: authError } = await this.supabase.functions.invoke('delete-user', {
+      body: { userId }
+    });
+
+    if (authError) {
+      // Log but don't throw — profile is already deleted which is the critical part
+      console.warn('Could not delete auth account for declined user:', authError);
+    }
   }
 
   /**
