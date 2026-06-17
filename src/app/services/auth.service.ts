@@ -145,12 +145,13 @@ export class AuthService {
     const origin = window.location.origin;
     const backendUrl = environment.backendUrl;
     const callbackURL = redirectTo || `${origin}/signup`;
+    const scopeMode = callbackURL.includes('/signup') ? 'minimal' : 'full';
     
     // Pass current userId if logged in to link accounts properly on the backend
     const currentUser = this.getCurrentUser();
     const userIdParam = currentUser?.id ? `&userId=${currentUser.id}` : '';
     
-    window.location.href = `${backendUrl}/api/auth/twitter?callbackURL=${encodeURIComponent(callbackURL)}${userIdParam}`;
+    window.location.href = `${backendUrl}/api/auth/twitter?callbackURL=${encodeURIComponent(callbackURL)}&scopeMode=${scopeMode}${userIdParam}`;
   }
 
   logout(redirect: boolean = true): Promise<void> {

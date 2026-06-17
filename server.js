@@ -99,6 +99,7 @@ function generatePKCE() {
 app.get('/api/auth/twitter', (req, res) => {
   const callbackURL = req.query.callbackURL || 'http://localhost:4200/auth/twitter/callback';
   const userId = req.query.userId; // Capture Supabase userId if provided
+  const scopeMode = req.query.scopeMode === 'minimal' ? 'minimal' : 'full';
   const state = generateState();
   const { verifier, challenge } = generatePKCE();
 
@@ -109,19 +110,24 @@ app.get('/api/auth/twitter', (req, res) => {
   console.log('Generated state:', state);
   console.log('Stored callback URL:', callbackURL);
   console.log('Associated userId:', userId || 'none');
+  console.log('OAuth scope mode:', scopeMode);
+
+  const scopes =
+    scopeMode === 'minimal'
+      ? 'users.read offline.access'
+      : 'users.read tweet.read like.read offline.access';
 
   // Redirect to Twitter OAuth 2.0 authorization URL with PKCE
-  // Added 'like.read' scope to verify likes
   const twitterAuthUrl = `https://twitter.com/i/oauth2/authorize?` +
     `response_type=code&` +
     `client_id=${TWITTER_CLIENT_ID}&` +
     `redirect_uri=${encodeURIComponent(TWITTER_REDIRECT_URI)}&` +
-    `scope=users.read%20tweet.read%20like.read%20offline.access&` +
+    `scope=${encodeURIComponent(scopes)}&` +
     `state=${state}&` +
     `code_challenge=${challenge}&` +
     `code_challenge_method=S256`;
 
-  console.log('Redirecting to Twitter OAuth with scopes: users.read tweet.read like.read offline.access');
+  console.log(`Redirecting to Twitter OAuth with scopes: ${scopes}`);
   res.redirect(twitterAuthUrl);
 });
 
@@ -129,6 +135,11 @@ app.get('/api/auth/twitter', (req, res) => {
 app.get('/api/auth/callback/twitter', async (req, res) => {
   const { code, state, error, error_description } = req.query;
   
+  console.log('Twitter callback hit:', {
+    url: req.originalUrl,
+    query: req.query,
+    method: req.method,
+  });
   console.log('Twitter callback received:', { code: !!code, state: !!state, error, error_description });
   
   const stateData = oauthStates.get(state);
