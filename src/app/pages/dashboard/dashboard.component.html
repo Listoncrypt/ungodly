@@ -354,7 +354,7 @@
             </div>
             <div>
               <h3 class="text-lg font-bold text-gray-900">Withdraw Funds</h3>
-              <p class="text-xs text-gray-400">Minimum withdrawal: $40</p>
+              <p class="text-xs text-gray-400">Minimum withdrawal: $12</p>
             </div>
           </div>
           <div class="space-y-4">
@@ -363,7 +363,7 @@
               <input
                 type="number"
                 [(ngModel)]="withdrawalForm.amount"
-                min="40"
+                min="12"
                 class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:border-gray-400 focus:ring-0 outline-none transition"
                 placeholder="Enter amount"
               />
@@ -379,7 +379,7 @@
             </div>
             <button
               (click)="submitWithdrawal()"
-              [disabled]="withdrawalForm.amount < 40 || !withdrawalForm.solanaAddress"
+              [disabled]="withdrawalForm.amount < 12 || !withdrawalForm.solanaAddress"
               class="w-full bg-gray-900 hover:bg-gray-700 text-white font-semibold py-3 rounded-lg transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Submit Withdrawal

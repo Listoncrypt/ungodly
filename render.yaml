@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: ungodly-backend
+    env: node
+    buildCommand: npm install --prefix . --only=production --ignore-scripts || true
+    startCommand: node server.js
+    envVars:
+      - key: TWITTER_CLIENT_ID
+        sync: false
+      - key: TWITTER_CLIENT_SECRET
+        sync: false
+      - key: TWITTER_REDIRECT_URI
+        sync: false
