@@ -83,8 +83,17 @@ export class SupabaseService {
     }
   }
 
+  private profileChannel: any = null;
+
   private async updateUserAndProfile(user: SupabaseUser | null) {
     this.currentUserSubject.next(user);
+    
+    // Clean up existing channel if it exists
+    if (this.profileChannel) {
+      this.supabase.removeChannel(this.profileChannel);
+      this.profileChannel = null;
+    }
+
     if (user) {
       // Fetch latest profile
       const { data: profile } = await this.supabase
@@ -96,7 +105,7 @@ export class SupabaseService {
       this.currentProfileSubject.next(profile as Profile);
 
       // Subscribe to real-time changes for this specific user's profile
-      this.supabase
+      this.profileChannel = this.supabase
         .channel(`public:profiles:id=eq.${user.id}`)
         .on('postgres_changes', { 
           event: '*', 
@@ -110,8 +119,6 @@ export class SupabaseService {
         .subscribe();
     } else {
       this.currentProfileSubject.next(null);
-      // Clean up subscriptions would be good here, but Supabase handles 
-      // channel cleanup reasonably well on disconnect/signout.
     }
   }
 
