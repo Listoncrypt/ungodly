@@ -35,7 +35,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   engagementTasks: PlatformTask[] = [];
 
   withdrawalForm = {
-    amount: 12,
+    amount: 5,
     solanaAddress: '',
   };
 
@@ -500,8 +500,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async submitWithdrawal() {
-    if (this.withdrawalForm.amount < 12) {
-      alert('Minimum withdrawal is $12.');
+    if (this.withdrawalForm.amount < 5) {
+      alert('Minimum withdrawal is $5.');
       return;
     }
     if (!this.withdrawalForm.solanaAddress) {
